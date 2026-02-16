@@ -90,7 +90,6 @@ def add_model(config: ModelConfig, project_root: Optional[Path] = None) -> None:
         project_root: Project root directory. If None, auto-discovered.
 
     Raises:
-        ValueError: If model name already exists.
         FileNotFoundError: If no project root found.
     """
     if project_root is None:
@@ -98,10 +97,8 @@ def add_model(config: ModelConfig, project_root: Optional[Path] = None) -> None:
 
     models = load_models(project_root)
 
-    # Check for duplicate name
-    if any(m.name == config.name for m in models):
-        raise ValueError(f"Model '{config.name}' already exists")
-
+    # Remove any existing model with the same name (update)
+    models = [m for m in models if m.name != config.name]
     models.append(config)
     save_models(models, project_root)
 

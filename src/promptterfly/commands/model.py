@@ -16,43 +16,16 @@ from promptterfly.utils.tui import print_table, print_success, print_error
 
 console = Console()
 
-# Default provider-model mapping for interactive selection.
-# Non‑local providers have curated model lists with recent releases.
-# For local providers (e.g., local), the list is empty, so the user will be prompted to type the model name directly.
+# A small curated list of well-known providers (used for provider selection)
+COMMON_PROVIDERS = [
+    "openai", "anthropic", "google", "mistral", "cohere",
+    "groq", "grok", "openrouter", "together", "anyscale", "local"
+]
+
+# For local providers, we don't predefine model names; user types them.
+# For cloud providers we fetch live from litellm in interactive_model_selection.
+# (This dict retained only for possible fallback if needed; keep local empty.)
 DEFAULT_PROVIDER_MODELS = {
-    # Major providers – recent models
-    "openai": [
-        "gpt-4.5-preview", "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"
-    ],
-    "anthropic": [
-        "claude-3-7-sonnet-20250219", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307",
-        "claude-2.1"
-    ],
-    "google": [
-        "gemini-2.0-flash-001", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro", "gemini-pro-vision"
-    ],
-    "mistral": [
-        "mistral-large-latest", "mistral-medium", "mistral-small", "open-mixtral-8x22b"
-    ],
-    "cohere": [
-        "command-r-plus", "command-r", "command"
-    ],
-    "groq": [
-        "llama3.3-70b-versatile", "llama3-70b-8192", "llama3-8b-8192", "mixtral-8x7b-32768", "gemma2-9b-it"
-    ],
-    "grok": [
-        "grok-2-latest", "grok-beta"
-    ],
-    "openrouter": [
-        "openrouter/quasar-alpha", "openrouter/anthracite-02b", "openrouter/phi-3-medium-128k"
-    ],
-    "together": [
-        "togethercomputer/llama-3.2-90b-text-preview", "togethercomputer/llama-2-70b-chat"
-    ],
-    "anyscale": [
-        "anyscale/meta-llama/Llama-3.2-90b-Text-Preview", "anyscale/meta-llama/Llama-2-70b-chat-hf"
-    ],
-    # Local provider: empty list indicates user should type the model name directly.
     "local": [],
 }
 
@@ -81,14 +54,9 @@ def infer_provider(model_str: str) -> Optional[str]:
 
 def interactive_provider_selection() -> str:
     """Interactively select a provider from available options."""
-    # Use a curated list of well-known providers; ignore litellm's raw list
-    providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
-    if not providers:
-        providers = ["openai"]  # fallback
-
+    providers = COMMON_PROVIDERS
     # Build case-insensitive mapping for provider names (full set)
     provider_map = {p.lower(): p for p in providers}
-
     # Truncate display to first 10 providers
     display_providers = providers[:10]
     console.print("[bold]Available providers:[/bold]")
@@ -96,9 +64,12 @@ def interactive_provider_selection() -> str:
         console.print(f"  {i}) {p}")
     if len(providers) > 10:
         console.print(f"  ... and {len(providers)-10} more. You can also type any provider name.")
-
     while True:
         choice = typer.prompt("Select provider by number or type name")
+        choice = choice.strip()
+        if not choice:
+            console.print("[yellow]Please enter a provider number or name.[/yellow]")
+            continue
         try:
             idx = int(choice) - 1
             if 0 <= idx < len(display_providers):
@@ -116,13 +87,31 @@ def interactive_provider_selection() -> str:
 def interactive_model_selection(provider: str) -> str:
     """Interactively select a model from the given provider's offerings."""
     models = []
-    # Prefer DEFAULT_PROVIDER_MODELS for well-known models
-    if provider in DEFAULT_PROVIDER_MODELS:
-        models = DEFAULT_PROVIDER_MODELS[provider]
+    try:
+        from litellm import model_list
+        if isinstance(model_list, dict):
+            if provider in model_list:
+                models = model_list[provider] or []
+                # Strip any provider prefixes that might be included
+                models = [m.split("/", 1)[-1] if isinstance(m, str) and "/" in m else m for m in models]
+        elif isinstance(model_list, list):
+            prefix = provider + "/"
+            models = []
+            for m in model_list:
+                if isinstance(m, str):
+                    if m.startswith(prefix):
+                        models.append(m.split("/", 1)[1])
+                    # Also include un-prefixed models? Possibly ignore; only take prefixed ones.
+        else:
+            pass
+    except ImportError:
+        pass
+
     if not models:
         return typer.prompt("Enter model identifier")
+
     models = sorted(set(models))
-    max_show = 10
+    max_show = 5
     console.print(f"[bold]Available models for {provider}:[/bold]")
     for i, m in enumerate(models[:max_show], 1):
         console.print(f"  {i}) {m}")
