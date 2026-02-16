@@ -95,7 +95,7 @@ def optimize(prompt_id: str, strategy: str = 'few_shot', dataset_path: Optional[
         tags=original_prompt.tags,
         created_at=original_prompt.created_at,
         updated_at=datetime.now(),
-        model_config=original_prompt.model_config,
+        model_name=original_prompt.model_name,
         metadata={**original_prompt.metadata, "optimization_strategy": strategy}
     )
 
