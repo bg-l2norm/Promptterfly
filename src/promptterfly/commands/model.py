@@ -18,11 +18,46 @@ console = Console()
 
 # Default provider-model mapping for interactive selection when litellm is unavailable
 DEFAULT_PROVIDER_MODELS = {
-    "openai": ["gpt-4", "gpt-4-turbo", "gpt-4o", "gpt-3.5-turbo", "text-davinci-003"],
-    "anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1"],
-    "google": ["gemini-pro", "gemini-1.5-pro-latest"],
-    "mistral": ["mistral-7b-instruct", "mistral-small", "mistral-medium", "mistral-large"],
-    "cohere": ["command-r", "command-r-plus", "command"],
+    # Major providers
+    "openai": [
+        "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo",
+        "text-davinci-003", "davinci", "curie", "babbage", "ada"
+    ],
+    "anthropic": [
+        "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307",
+        "claude-2.1", "claude-2.0", "claude-instant-1.2"
+    ],
+    "google": [
+        "gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro", "gemini-pro-vision"
+    ],
+    "mistral": [
+        "mistral-large-latest", "mistral-medium", "mistral-small", "mistral-7b-instruct"
+    ],
+    "cohere": [
+        "command-r-plus", "command-r", "command", "command-light", "command-medium"
+    ],
+    "groq": [
+        "llama3-70b-8192", "llama3-8b-8192", "mixtral-8x7b-32768", "gemma2-9b-it"
+    ],
+    "grok": [
+        "grok-x-latest", "grok-beta"
+    ],
+    "openrouter": [
+        "openrouter/quasar-alpha", "openrouter/anthracite-02b", "openrouter/phi-3-medium-128k"
+    ],
+    "together": [
+        "togethercomputer/llama-2-70b-chat", "togethercomputer/llama-2-13b-chat"
+    ],
+    "anyscale": [
+        "anyscale/meta-llama/Llama-2-7b-chat-hf", "anyscale/meta-llama/Llama-2-13b-chat-hf"
+    ],
+    # Local/community
+    "ollama": [
+        "ollama/llama2", "ollama/mistral", "ollama/codellama"
+    ],
+    "local": [
+        "local/llama3", "local/mistral", "local/codellama"
+    ],
 }
 
 
@@ -50,24 +85,10 @@ def infer_provider(model_str: str) -> Optional[str]:
 
 def interactive_provider_selection() -> str:
     """Interactively select a provider from available options."""
-    providers = []
-    try:
-        from litellm import model_list
-        if isinstance(model_list, dict):
-            providers = sorted(model_list.keys())
-        elif isinstance(model_list, list):
-            # Extract unique provider prefixes from model strings
-            prefixes = set()
-            for m in model_list:
-                if isinstance(m, str) and '/' in m:
-                    prefixes.add(m.split('/', 1)[0])
-            providers = sorted(prefixes)
-        else:
-            providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
-    except ImportError:
-        providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
+    # Use a curated list of well-known providers; ignore litellm's raw list
+    providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
     if not providers:
-        providers = sorted(DEFAULT_PROVIDER_MODELS.keys()) or ["openai"]
+        providers = ["openai"]  # fallback
 
     # Build case-insensitive mapping for provider names (full set)
     provider_map = {p.lower(): p for p in providers}
@@ -99,21 +120,10 @@ def interactive_provider_selection() -> str:
 def interactive_model_selection(provider: str) -> str:
     """Interactively select a model from the given provider's offerings."""
     models = []
-    try:
-        from litellm import model_list
-        if isinstance(model_list, dict):
-            if provider in model_list:
-                models = model_list[provider] or []
-        elif isinstance(model_list, list):
-            # Filter models with prefix "provider/"
-            prefix = provider + "/"
-            models = [m for m in model_list if isinstance(m, str) and m.startswith(prefix)]
-        else:
-            pass
-    except ImportError:
-        pass
-    if not models and provider in DEFAULT_PROVIDER_MODELS:
+    # Prefer DEFAULT_PROVIDER_MODELS for well-known models
+    if provider in DEFAULT_PROVIDER_MODELS:
         models = DEFAULT_PROVIDER_MODELS[provider]
+    # Optionally, could supplement with litellm if needed, but default is cleanest.
     if not models:
         return typer.prompt("Enter model identifier")
     models = sorted(set(models))
