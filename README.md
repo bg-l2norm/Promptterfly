@@ -74,7 +74,7 @@ If you're new to Promptterfly, follow these steps:
    ```bash
    prompt create
    ```
-   You'll be prompted for a name, optional description, tags, and the template (use `{variable}` placeholders).
+   You'll be prompted for a name, optional description, and the template (use `{variable}` placeholders).
 
 4. **Render with variables** (optional):
    Create a JSON file with values for your template variables, e.g.:
@@ -225,14 +225,14 @@ Rules:
 - Extra keys in the JSON are ignored.
 - You can also pipe the JSON via stdin if your shell supports it (e.g., `echo '{"x":1}' | prompt render <id> -` is not yet supported; currently a file path is required).
 
-### Tags vs Description
+### Finding Prompts
 
-- **Description**: A free-form text (up to a few sentences) that explains what the prompt is for. It appears in `prompt show` and is meant for human readers. Optional.
-- **Tags**: One or more short labels (e.g., `support`, `marketing`, `creative`) used for categorization and filtering. Use commas to add multiple tags. You can list prompts by tag: `prompt list --tag support`.
+Promptterfly includes a built-in fuzzy search to quickly locate prompts by name, description, or template content.
 
-**When to use which?**
-- Add a description when you want to explain the prompt's purpose, scope, or how to use it.
-- Add tags to group prompts by domain, project, or any scheme that helps you find them quickly.
+- Run `prompt find <query>` (or aliases `search`, `f`) to search.
+- The search scores matches across name, description, and template. If the best match is confident (≥80% similarity), it is displayed immediately.
+- Otherwise, the top 3 results are shown, and you can choose which one to view.
+- This eliminates the need for tags; use descriptive names and detailed descriptions for better recall.
 
 ### Optimization
 

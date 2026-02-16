@@ -31,6 +31,9 @@ ALIAS_MAP = {
     "models": ["model", "list"],
     "addmodel": ["model", "add"],
     "setmodel": ["model", "set-default"],
+    "find": ["prompt", "find"],
+    "search": ["prompt", "find"],
+    "f": ["prompt", "find"],
 }
 
 def print_header():
@@ -52,6 +55,7 @@ def print_help():
     console.print("  show <id>    → prompt show <id>")
     console.print("  del          → prompt delete")
     console.print("  run          → prompt render")
+    console.print("  find / search / f → prompt find <query>")
     console.print("  hist         → version history")
     console.print("  restore      → version restore")
     console.print("  opt          → optimize improve")
@@ -68,6 +72,7 @@ def print_help():
         ("prompt update <id>", "Update prompt"),
         ("prompt delete <id>", "Delete prompt"),
         ("prompt render <id> [vars.json]", "Render with variables"),
+        ("prompt find <query>", "Fuzzy search prompts (auto-select best or list top 3)"),
         ("version history <id>", "Show version history"),
         ("version restore <id> <version>", "Restore version"),
         ("optimize improve <id> [--strategy few_shot] [--dataset path]", "Run optimization"),

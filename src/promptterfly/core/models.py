@@ -24,7 +24,6 @@ class Prompt(BaseModel):
     name: str
     description: Optional[str] = None
     template: str
-    tags: List[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
     model_name: Optional[str] = Field(default=None, alias="model_config")

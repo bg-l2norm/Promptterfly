@@ -92,7 +92,6 @@ def optimize(prompt_id: int, strategy: str = 'few_shot', dataset_path: Optional[
         name=original_prompt.name,
         description=original_prompt.description,
         template=optimized_template,
-        tags=original_prompt.tags,
         created_at=original_prompt.created_at,
         updated_at=datetime.now(),
         model_name=original_prompt.model_name,
