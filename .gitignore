@@ -1,0 +1,13 @@
+__pycache__/
+.venv
+.pytest_cache/
+*.pyc
+.env
+dist
+build
+*.egg-info
+.promptterfly/
+.vscode/
+.idea/
+*.swp
+.DS_Store
