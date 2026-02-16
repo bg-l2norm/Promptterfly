@@ -1,11 +1,12 @@
 """Interactive REPL for Promptterfly."""
 import sys
 import shlex
+import click
 from pathlib import Path
 from typing import List
 from rich.console import Console
 from rich.panel import Panel
-from rich.prompt import Confirm
+from rich.prompt import Prompt
 import random
 
 from promptterfly.cli import app
@@ -29,11 +30,84 @@ ALIAS_MAP = {
     "restore": ["version", "restore"],
     "opt": ["optimize", "improve"],
     "models": ["model", "list"],
-    # removed "addmodel", "setmodel" in favor of multi-word aliases below
     "find": ["prompt", "find"],
     "search": ["prompt", "find"],
     "f": ["prompt", "find"],
 }
+
+# Multi-word aliases (natural verb-noun phrasing)
+MULTI_ALIASES = {
+    "add model": ["model", "add"],
+    "remove model": ["model", "remove"],
+    "list models": ["model", "list"],
+    "set model": ["model", "set-default"],
+    "config set": ["config-set"],
+}
+
+def ensure_arguments(parts: List[str]) -> List[str]:
+    """
+    If called from the REPL, prompt the user for any missing required positional arguments.
+    Returns a new parts list with prompted values inserted.
+    """
+    if not parts:
+        return parts
+
+    # Resolve the Click command object given parts
+    # parts[0] is either a top-level simple command or a group name.
+    # If parts[0] is a group and we have parts[1], then command is parts[1].
+    try:
+        if parts[0] in app.registered_commands:
+            first_cmd = app.registered_commands[parts[0]]
+            if isinstance(first_cmd, click.Group) and len(parts) > 1:
+                group = first_cmd
+                subcmd_name = parts[1]
+                if subcmd_name not in group.commands:
+                    return parts  # will be handled by Typer error later
+                cmd = group.commands[subcmd_name]
+                arg_start = 2
+            else:
+                cmd = first_cmd
+                arg_start = 1
+        else:
+            return parts  # unknown command, let Typer handle
+    except Exception:
+        return parts
+
+    # Identify required positional arguments (in order)
+    required_args = []
+    for param in cmd.params:
+        if isinstance(param, click.Argument) and param.required:
+            required_args.append(param.name)
+    if not required_args:
+        return parts
+
+    # Split current args into positionals and options
+    current_args = parts[arg_start:]
+    positionals = [a for a in current_args if not a.startswith('-')]
+    options = [a for a in current_args if a.startswith('-')]
+
+    if len(positionals) >= len(required_args):
+        return parts
+
+    # Prompt for missing arguments one by one
+    new_positionals = positionals[:]
+    for i in range(len(positionals), len(required_args)):
+        pname = required_args[i]
+        # Create a friendly question: "What's the <human name>?" (snake_case to Title with spaces)
+        human_name = pname.replace('_', ' ').title()
+        # Special cases for better phrasing
+        special_phrases = {
+            "prompt_id": "Prompt ID",
+            "version": "Version number",
+            "query": "Search query",
+        }
+        if pname in special_phrases:
+            human_name = special_phrases[pname]
+        response = Prompt.ask(f"What's the {human_name}?", default="").strip()
+        new_positionals.append(response)
+
+    # Rebuild parts: [command path] + new_positionals + options
+    return parts[:arg_start] + new_positionals + options
 
 # Multi-word aliases (natural verb-noun phrasing)
 MULTI_ALIASES = {
@@ -162,6 +236,9 @@ def repl_loop():
                     parts = replacement + parts[1:]
                 else:
                     parts = replacement + parts[1:]
+
+        # Interactively prompt for any missing required arguments
+        parts = ensure_arguments(parts)
 
         # Dispatch to Typer CLI programmatically
         try:
