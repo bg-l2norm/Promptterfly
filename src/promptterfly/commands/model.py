@@ -53,18 +53,21 @@ def interactive_provider_selection() -> str:
     providers = []
     try:
         from litellm import model_list
-        # Handle both dict and list representations
-        if hasattr(model_list, "keys"):
+        if isinstance(model_list, dict):
             providers = sorted(model_list.keys())
         elif isinstance(model_list, list):
-            # If it's a list, assume it's already the providers list
-            providers = sorted(model_list)
+            # Extract unique provider prefixes from model strings
+            prefixes = set()
+            for m in model_list:
+                if isinstance(m, str) and '/' in m:
+                    prefixes.add(m.split('/', 1)[0])
+            providers = sorted(prefixes)
         else:
             providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
     except ImportError:
         providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
     if not providers:
-        providers = ["openai"]  # fallback
+        providers = sorted(DEFAULT_PROVIDER_MODELS.keys()) or ["openai"]
     # Build case-insensitive mapping for provider names
     provider_map = {p.lower(): p for p in providers}
     console.print("[bold]Available providers:[/bold]")
@@ -91,12 +94,14 @@ def interactive_model_selection(provider: str) -> str:
     models = []
     try:
         from litellm import model_list
-        # Accept both dict-like and other structures; typical is dict mapping provider -> list
         if isinstance(model_list, dict):
             if provider in model_list:
                 models = model_list[provider] or []
+        elif isinstance(model_list, list):
+            # Filter models with prefix "provider/"
+            prefix = provider + "/"
+            models = [m for m in model_list if isinstance(m, str) and m.startswith(prefix)]
         else:
-            # If it's not a dict, ignore; fall back to defaults
             pass
     except ImportError:
         pass
