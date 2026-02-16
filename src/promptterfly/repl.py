@@ -15,20 +15,11 @@ from promptterfly.utils.quotes import get_random_quote
 
 console = Console()
 
-BANNER = r"""
-╔═══════════════════════════════════════════════════╗
-║            ____  _  _   ___   ___  _   _         ║
-║           |  _ \| || | |_ _| |_ _|| | | |        ║
-║           | |_) | || |  | |   | | | |_| |        ║
-║           |  _ <|__  _| | |   | | |  _  |        ║
-║           |_| \_\  ||_| |___| |___||_| |_|        ║
-║                    Prompt Manager v0.1.0           ║
-╚═══════════════════════════════════════════════════╝
-"""
+from promptterfly.utils.banner import print_banner
 
 def print_header():
     """Print welcome banner and a random quote."""
-    console.print(BANNER, style="bold cyan")
+    print_banner()
     console.print(f"[italic]\"{get_random_quote()}\"[/italic]\n")
     console.print("[green]Welcome to Promptterfly![/green]")
     console.print("Type [bold]'help'[/bold] for available commands, or [bold]'exit'[/bold] to quit.\n")
