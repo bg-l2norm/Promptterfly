@@ -2,11 +2,14 @@
 import typer
 from typing import Optional
 from pathlib import Path
+from rich.console import Console
 
 app = typer.Typer(help="Promptterfly: Local prompt manager with versioning & optimization")
 
 # Import shared helpers from model commands to avoid duplication
 from promptterfly.commands.model import interactive_provider_selection, interactive_model_selection
+
+console = Console()
 
 
 @app.command()
@@ -33,17 +36,17 @@ def init(
     # Walkthrough: ask if they want to set up a model now
     setup_model = typer.confirm("Would you like to set up a default model now?", default=True)
     if not setup_model:
-        typer.echo("You can add models later with [bold]promptterfly model add[/bold].")
+        console.print("You can add models later with [bold]promptterfly model add[/bold].")
         return
 
-    typer.echo("\n[bold]Configure your first LLM model:[/bold]")
+    console.print("\n[bold]Configure your first LLM model:[/bold]")
     provider = interactive_provider_selection()
     model_id = interactive_model_selection(provider)
     # Normalize model identifier: strip provider prefix if present
     if "/" in model_id:
         parts = model_id.split("/", 1)
         if parts[0] != provider:
-            typer.echo(f"[yellow]Warning: model prefix '{parts[0]}' differs from selected provider '{provider}'. Using '{parts[1]}' as model name.[/yellow]")
+            console.print(f"[yellow]Warning: model prefix '{parts[0]}' differs from selected provider '{provider}'. Using '{parts[1]}' as model name.[/yellow]")
         model_id = parts[1]
 
     # Suggest a model config name
@@ -99,7 +102,7 @@ def init(
         set_default(name, project_root)
         typer.echo(f"✅ Added model '{name}' and set as default.")
     except ValueError as e:
-        typer.echo(f"[red]Error adding model: {e}[/red]")
+        console.print(f"[red]Error adding model: {e}[/red]")
         raise typer.Exit(1)
 
 
