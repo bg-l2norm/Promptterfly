@@ -8,6 +8,7 @@ from promptterfly.storage.version_store import VersionStore
 from promptterfly.optimization.engine import optimize as engine_optimize
 from promptterfly.utils.io import find_project_root
 from promptterfly.utils.tui import print_success, print_error
+from promptterfly.utils.loader import spiky_loading
 
 app = typer.Typer(help="Optimize prompts")
 
@@ -51,13 +52,14 @@ def improve(
     versions = vs.list_versions(prompt_id)
     version_num = versions[-1].version if versions else None
 
-    # Run optimization
+    # Run optimization with loading animation
     try:
-        new_prompt = engine_optimize(
-            prompt_id=prompt_id,
-            strategy=strategy,
-            dataset_path=str(dataset) if dataset else None
-        )
+        with spiky_loading("Optimizing prompt with DSPy..."):
+            new_prompt = engine_optimize(
+                prompt_id=prompt_id,
+                strategy=strategy,
+                dataset_path=str(dataset) if dataset else None
+            )
     except Exception as e:
         print_error(f"Optimization failed: {e}")
         raise typer.Exit(1)
