@@ -14,24 +14,42 @@ A local CLI tool for managing and optimizing prompts with simple versioning and 
 - Local-first: all data stored in `.promptterfly/`
 - Rich terminal UI with tables and syntax highlighting
 
-## Installation
+## Installation & Usage
 
-**One-command setup:**
+**First run:**
 
 ```bash
-./setup.sh
+./start.sh
 ```
 
-This script will:
-- Create a virtual environment in `.venv/` (if not present)
-- Install all dependencies
+The `start.sh` script will:
+- Detect if it's your first time
+- Ask if you want to create a virtual environment (recommended)
+- Let you choose optional dependencies (test, dev)
 - Set up the `promptterfly` command
+- Automatically activate the environment on subsequent runs
 
-To use Promptterfly in the future, activate the venv first:
+After setup, you can simply run:
+
+```bash
+./start.sh --help
+./start.sh init
+./start.sh prompt create
+```
+
+Or, if you prefer, you can activate the venv manually and use the command directly:
 
 ```bash
 source .venv/bin/activate
 promptterfly --help
+```
+
+**Manual install (alternative):**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[test,dev]"  # or just -e . for core
 ```
 
 ## Quick Start

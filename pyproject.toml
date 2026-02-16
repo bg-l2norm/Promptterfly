@@ -19,6 +19,17 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "typer[all]",
+]
+dev = [
+    "ruff>=0.3.0",
+    "pre-commit>=3.0",
+]
+
 [project.scripts]
 promptterfly = "promptterfly.cli:app"
 
