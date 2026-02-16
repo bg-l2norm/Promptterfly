@@ -130,7 +130,7 @@ class TestPrompt:
         )
         assert prompt.description is None
         assert prompt.tags == []
-        assert prompt.model_config is None
+        assert prompt.model_name is None
         assert prompt.metadata == {}
 
 

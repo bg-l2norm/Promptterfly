@@ -16,6 +16,15 @@ from promptterfly.utils.tui import print_table, print_success, print_error
 
 console = Console()
 
+# Default provider-model mapping for interactive selection when litellm is unavailable
+DEFAULT_PROVIDER_MODELS = {
+    "openai": ["gpt-4", "gpt-4-turbo", "gpt-4o", "gpt-3.5-turbo", "text-davinci-003"],
+    "anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-2.1"],
+    "google": ["gemini-pro", "gemini-1.5-pro-latest"],
+    "mistral": ["mistral-7b-instruct", "mistral-small", "mistral-medium", "mistral-large"],
+    "cohere": ["command-r", "command-r-plus", "command"],
+}
+
 
 def infer_provider(model_str: str) -> Optional[str]:
     """Infer the provider from a model identifier."""
@@ -37,6 +46,64 @@ def infer_provider(model_str: str) -> Optional[str]:
         return "cohere"
     # Add more as needed
     return None
+
+
+def interactive_provider_selection() -> str:
+    """Interactively select a provider from available options."""
+    providers = []
+    try:
+        from litellm import model_list
+        providers = sorted(model_list.keys())
+    except ImportError:
+        providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
+    if not providers:
+        providers = ["openai"]  # fallback
+    console.print("[bold]Available providers:[/bold]")
+    for i, p in enumerate(providers, 1):
+        console.print(f"  {i}) {p}")
+    choice = typer.prompt("Select provider by number or type name")
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(providers):
+            return providers[idx]
+    except ValueError:
+        pass
+    if choice in providers:
+        return choice
+    console.print(f"[yellow]Invalid provider '{choice}'. Using '{providers[0]}' as default.[/yellow]")
+    return providers[0]
+
+
+def interactive_model_selection(provider: str) -> str:
+    """Interactively select a model from the given provider's offerings."""
+    models = []
+    try:
+        from litellm import model_list
+        if provider in model_list:
+            models = model_list[provider]
+    except ImportError:
+        pass
+    if not models and provider in DEFAULT_PROVIDER_MODELS:
+        models = DEFAULT_PROVIDER_MODELS[provider]
+    if not models:
+        return typer.prompt("Enter model identifier")
+    models = sorted(set(models))
+    max_show = 30
+    console.print(f"[bold]Available models for {provider}:[/bold]")
+    for i, m in enumerate(models[:max_show], 1):
+        console.print(f"  {i}) {m}")
+    if len(models) > max_show:
+        console.print(f"  ... and {len(models)-max_show} more")
+    choice = typer.prompt("Select model by number or type full model name")
+    try:
+        idx = int(choice) - 1
+        if 0 <= idx < len(models):
+            return models[idx]
+        else:
+            console.print("[yellow]Invalid number. Please type the full model identifier.[/yellow]")
+            return typer.prompt("Enter model identifier")
+    except ValueError:
+        return choice
 
 
 def ensure_dotenv_gitignore(project_root: Path):
@@ -116,36 +183,47 @@ def add_model_cmd(
         print_error("Not in a Promptterfly project. Run 'promptterfly init' first.")
         raise typer.Exit(1)
 
-    # Interactive prompts for missing arguments
-    if name is None:
-        name = typer.prompt("Model name (for your reference)")
-
-    if model is None:
-        model = typer.prompt("Model identifier (e.g., gpt-4, anthropic/claude-3-opus)")
-
-    # If provider not provided, try to infer from model
     final_provider = provider
-    if final_provider is None:
-        inferred = infer_provider(model)
-        if inferred:
-            final_provider = inferred
-            # If model includes provider prefix, strip it
-            if "/" in model:
-                model = model.split("/", 1)[1]
-                console.print(f"[dim]Inferred provider: {final_provider}; model normalized to '{model}'[/dim]")
-            else:
-                console.print(f"[dim]Inferred provider: {final_provider}[/dim]")
-        else:
-            final_provider = typer.prompt("Provider", default="openai")
-    else:
-        # Provider provided; still check for slash and normalize
-        if "/" in model:
-            parts = model.split("/", 1)
-            if parts[0] != final_provider:
-                console.print(f"[yellow]Warning: model prefix '{parts[0]}' differs from specified provider '{final_provider}'. Using specified provider and stripping prefix.[/yellow]")
-            model = parts[1]
+    final_model = model
 
-    # Determine api_key_env if not given
+    # Resolve provider
+    if final_provider is None:
+        if final_model is not None:
+            inferred = infer_provider(final_model)
+            if inferred:
+                final_provider = inferred
+            else:
+                final_provider = interactive_provider_selection()
+        else:
+            final_provider = interactive_provider_selection()
+
+    # Safety fallback
+    if not final_provider:
+        final_provider = "openai"
+
+    # Resolve model if missing
+    if final_model is None:
+        final_model = interactive_model_selection(final_provider)
+
+    # Normalize model identifier: strip provider prefix if present
+    if "/" in final_model:
+        parts = final_model.split("/", 1)
+        prefix, model_clean = parts
+        if prefix != final_provider:
+            console.print(f"[yellow]Warning: model prefix '{prefix}' differs from selected provider '{final_provider}'. Using '{model_clean}' as model name.[/yellow]")
+        final_model = model_clean
+
+    # Echo provider if inferred or selected (i.e., when provider arg was not given)
+    if provider is None:
+        console.print(f"[dim]Using provider: {final_provider}[/dim]")
+
+    # Determine name
+    final_name = name
+    if final_name is None:
+        suggested = f"{final_provider}-{final_model}".replace("/", "-")
+        final_name = typer.prompt("Model config name", default=suggested)
+
+    # Determine api_key_env
     final_api_key_env = api_key_env
     if final_api_key_env is None:
         default_env = f"{final_provider.upper()}_API_KEY"
@@ -157,7 +235,6 @@ def add_model_cmd(
         key = typer.prompt(f"{final_provider} API key", hide_input=True)
         dotenv_path = project_root / ".env"
         ensure_dotenv_gitignore(project_root)
-        # Avoid duplicate entries
         if dotenv_path.exists():
             existing = dotenv_path.read_text()
             if f"{final_api_key_env}=" in existing:
@@ -172,18 +249,18 @@ def add_model_cmd(
             console.print(f"✅ Created .env with API key at {dotenv_path}")
 
     config = ModelConfig(
-        name=name,
+        name=final_name,
         provider=final_provider,
-        model=model,
+        model=final_model,
         api_key_env=final_api_key_env,
         temperature=temperature,
         max_tokens=max_tokens
     )
     try:
         add_model(config, project_root)
-        print_success(f"Added model '{name}'")
+        print_success(f"Added model '{final_name}'")
         typer.echo(f"Provider: {final_provider}")
-        typer.echo(f"Model: {model}")
+        typer.echo(f"Model: {final_model}")
         typer.echo(f"Temperature: {temperature}")
         typer.echo(f"Max tokens: {max_tokens}")
     except ValueError as e:
