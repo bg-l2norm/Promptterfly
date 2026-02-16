@@ -76,8 +76,9 @@ def list():
     prompts = store.list_prompts()
     rows = []
     for p in prompts:
-        rows.append([p.id, p.name, p.updated_at.strftime("%Y-%m-%d %H:%M")])
-    print_table(["ID", "Name", "Updated"], rows, title="Prompts")
+        tags_str = ", ".join(p.tags) if p.tags else "-"
+        rows.append([p.id, p.name, tags_str, p.updated_at.strftime("%Y-%m-%d %H:%M")])
+    print_table(["ID", "Name", "Tags", "Updated"], rows, title="Prompts")
 
 
 @app.command()
@@ -107,6 +108,8 @@ def create():
     typer.echo("Creating a new prompt")
     name = typer.prompt("Name")
     description = typer.prompt("Description (Optional)", default="")
+    tags_input = typer.prompt("Tags (comma-separated, optional)", default="")
+    tags = [t.strip() for t in tags_input.split(",") if t.strip()]
     store = _get_store()
     # Ensure unique name (auto-append _N if duplicate)
     existing_names = {p.name for p in store.list_prompts()}
@@ -139,6 +142,7 @@ def create():
         name=name,
         description=description or None,
         template=template,
+        tags=tags,
         created_at=now,
         updated_at=now,
     )
@@ -188,6 +192,8 @@ def update(prompt_id: int):
     typer.echo("Leave blank to keep current value.")
     name = typer.prompt("Name", default=p.name)
     description = typer.prompt("Description (Optional)", default=p.description or "")
+    tags_input = typer.prompt("Tags (comma-separated)", default=", ".join(p.tags) if p.tags else "")
+    tags = [t.strip() for t in tags_input.split(",") if t.strip()] if tags_input else p.tags
     # Ensure name uniqueness (exclude current prompt)
     existing_names = {other.name for other in store.list_prompts() if other.id != p.id}
     base_name = name
@@ -211,6 +217,7 @@ def update(prompt_id: int):
     new_template = template_input if template_input else p.template
     p.name = name
     p.description = description or None
+    p.tags = tags
     p.template = new_template
     p.updated_at = datetime.now()
     store.save_prompt(p)

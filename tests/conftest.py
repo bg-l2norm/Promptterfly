@@ -1,10 +1,21 @@
 """Pytest configuration and fixtures for Promptterfly tests."""
+import sys
+from pathlib import Path
+
+# Remove the repository root from sys.path to avoid loading the top-level 'promptterfly' package
+repo_root = str(Path(__file__).resolve().parent.parent)
+if repo_root in sys.path:
+    sys.path.remove(repo_root)
+# Prepend the src directory to ensure the correct package is imported
+sys.path.insert(0, str(Path(repo_root) / "src"))
+
 import pytest
 import tempfile
 import shutil
-from pathlib import Path
 from datetime import datetime
 from promptterfly.core.models import Prompt, ProjectConfig
+# Debug: print which module file is loaded for Prompt
+print(f"DEBUG: Prompt imported from: {Prompt.__module__}, file: {sys.modules[Prompt.__module__].__file__}")
 from promptterfly.storage.prompt_store import PromptStore
 from promptterfly.core.config import save_config, DEFAULT_CONFIG
 

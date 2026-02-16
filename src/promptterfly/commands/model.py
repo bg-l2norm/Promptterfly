@@ -58,20 +58,25 @@ def interactive_provider_selection() -> str:
         providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
     if not providers:
         providers = ["openai"]  # fallback
+    # Build case-insensitive mapping for provider names
+    provider_map = {p.lower(): p for p in providers}
     console.print("[bold]Available providers:[/bold]")
     for i, p in enumerate(providers, 1):
         console.print(f"  {i}) {p}")
-    choice = typer.prompt("Select provider by number or type name")
-    try:
-        idx = int(choice) - 1
-        if 0 <= idx < len(providers):
-            return providers[idx]
-    except ValueError:
-        pass
-    if choice in providers:
-        return choice
-    console.print(f"[yellow]Invalid provider '{choice}'. Using '{providers[0]}' as default.[/yellow]")
-    return providers[0]
+    while True:
+        choice = typer.prompt("Select provider by number or type name")
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(providers):
+                return providers[idx]
+            else:
+                console.print(f"[yellow]Invalid number. Please enter a number between 1 and {len(providers)}.[/yellow]")
+        except ValueError:
+            lc = choice.lower()
+            if lc in provider_map:
+                return provider_map[lc]
+            else:
+                console.print(f"[yellow]Invalid provider '{choice}'. Please select a valid provider from the list.[/yellow]")
 
 
 def interactive_model_selection(provider: str) -> str:
@@ -94,16 +99,17 @@ def interactive_model_selection(provider: str) -> str:
         console.print(f"  {i}) {m}")
     if len(models) > max_show:
         console.print(f"  ... and {len(models)-max_show} more")
-    choice = typer.prompt("Select model by number or type full model name")
-    try:
-        idx = int(choice) - 1
-        if 0 <= idx < len(models):
-            return models[idx]
-        else:
-            console.print("[yellow]Invalid number. Please type the full model identifier.[/yellow]")
-            return typer.prompt("Enter model identifier")
-    except ValueError:
-        return choice
+    while True:
+        choice = typer.prompt("Select model by number or type full model name")
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(models):
+                return models[idx]
+            else:
+                console.print(f"[yellow]Invalid number. Please enter a number between 1 and {len(models)}.[/yellow]")
+        except ValueError:
+            # Non-numeric input is treated as a custom model identifier
+            return choice
 
 
 def ensure_dotenv_gitignore(project_root: Path):
@@ -111,13 +117,13 @@ def ensure_dotenv_gitignore(project_root: Path):
     gitignore_path = project_root / ".gitignore"
     entry = ".env"
     if gitignore_path.exists():
-        lines = gitignore_path.read_text().splitlines()
+        lines = [line.strip() for line in gitignore_path.read_text(encoding="utf-8").splitlines()]
         if entry not in lines:
-            with open(gitignore_path, "a") as f:
+            with open(gitignore_path, "a", encoding="utf-8") as f:
                 f.write(f"\n{entry}\n")
             console.print("[dim]Added .env to .gitignore[/dim]")
     else:
-        with open(gitignore_path, "w") as f:
+        with open(gitignore_path, "w", encoding="utf-8") as f:
             f.write(f"{entry}\n")
         console.print("[dim]Created .gitignore with .env[/dim]")
 
@@ -236,15 +242,17 @@ def add_model_cmd(
         dotenv_path = project_root / ".env"
         ensure_dotenv_gitignore(project_root)
         if dotenv_path.exists():
-            existing = dotenv_path.read_text()
-            if f"{final_api_key_env}=" in existing:
+            existing = dotenv_path.read_text(encoding="utf-8")
+            lines = existing.splitlines()
+            # Check if any line starts with the env var name (ignoring leading whitespace)
+            if any(line.strip().startswith(f"{final_api_key_env}=") for line in lines):
                 console.print(f"[yellow]{final_api_key_env} already exists in .env. Skipping.[/yellow]")
             else:
-                with open(dotenv_path, "a") as f:
+                with open(dotenv_path, "a", encoding="utf-8") as f:
                     f.write(f"\n{final_api_key_env}={key}\n")
                 console.print(f"✅ API key saved to {dotenv_path}")
         else:
-            with open(dotenv_path, "w") as f:
+            with open(dotenv_path, "w", encoding="utf-8") as f:
                 f.write(f"{final_api_key_env}={key}\n")
             console.print(f"✅ Created .env with API key at {dotenv_path}")
 
