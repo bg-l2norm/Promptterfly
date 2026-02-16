@@ -10,63 +10,78 @@ A self-evolving prompt manager that automatically optimizes your prompts — sma
 
 - **No Git required** – automatic local versioning with snapshots
 - **DSPy-powered optimization** – improve prompts with few-shot learning in one command
-- **Zero hassle setup** – `./start.sh` guides you through first-time install
+- **Zero hassle setup** – one script installs, another launches
 - **Model-agnostic** – configure any LLM provider (OpenAI, Anthropic, etc.)
 - **Terminal-native** – works where you work, rich UI, no web app
 
 ## Installation
 
-### One-command bootstrap (recommended)
+Run the setup script once to install Promptterfly and its dependencies:
+
+```bash
+./setup.sh
+```
+
+It will:
+- Create a virtual environment (`.venv/`) if needed
+- Install the package and optional extras (test/dev) of your choice
+- Mark the installation as complete
+
+## Usage
+
+After installation, launch an interactive shell with Promptterfly ready:
 
 ```bash
 ./start.sh
 ```
 
-The script will:
-- Create a virtual environment (`.venv/`) or reuse existing
-- Install package and optional dependencies (test/dev)
-- Configure your environment
-- Auto-activate on future runs
-
-Afterwards, simply use:
+This opens a shell with the virtual environment activated. Inside, run `promptterfly` commands:
 
 ```bash
-./start.sh --help
-./start.sh init
-./start.sh prompt create
+promptterfly --help
+promptterfly init
+promptterfly prompt create
+promptterfly optimize improve <id>
 ```
 
-### Manual install
+You can also pass a command directly:
 
 ```bash
-python3 -m venv .venv
+./start.sh prompt list
+./start.sh version history <id>
+```
+
+**Manual activation (alternative):**
+
+```bash
 source .venv/bin/activate
-pip install -e ".[test]"   # core + test deps
-# or: pip install -e .     # core only
+promptterfly --help
 ```
 
 ## Quick Start
 
 ```bash
-# 1. Initialize in your project
+# Inside the start.sh shell:
+
+# Initialize in your project
 promptterfly init
 
-# 2. Create a prompt (interactive)
+# Create a prompt (interactive)
 promptterfly prompt create
 
-# 3. List prompts
+# List prompts
 promptterfly prompt list
 
-# 4. Render with variables
+# Render a prompt with variables
 promptterfly render <prompt_id> variables.json
 
-# 5. Optimize it (uses DSPy + your configured model)
+# Optimize it (uses DSPy + your configured model)
 promptterfly optimize improve <prompt_id> --strategy few_shot
 
-# 6. View version history
+# View version history
 promptterfly version history <prompt_id>
 
-# 7. Rollback if needed
+# Restore a previous version
 promptterfly version restore <prompt_id> 1
 ```
 
@@ -101,7 +116,7 @@ You can edit it directly or use `promptterfly config set <key> <value>`.
 │           └── ...
 ```
 
-No Git noise; everything is plain files you can inspect.
+Plain files, no Git required.
 
 ## Commands
 
@@ -133,19 +148,19 @@ No Git noise; everything is plain files you can inspect.
 
 Run `promptterfly --help` or `promptterfly <command> --help` for details.
 
-## How Optimization Works (Under the Hood)
+## How Optimization Works
 
-1. `optimize improve` takes your prompt template and a small dataset of input/output examples (default: `.promptterfly/dataset.jsonl`).
-2. DSPy builds a signature from your prompt’s variable names and compiles a few-shot module using `BootstrapFewShot`.
-3. The best demonstrations are selected and appended to your prompt as an `Examples:` section.
+1. `optimize improve` takes your prompt and a dataset (default `.promptterfly/dataset.jsonl`) of input/output examples.
+2. DSPy builds a signature from your prompt’s variables and compiles a few-shot module via `BootstrapFewShot`.
+3. The best demonstrations are selected and appended as an `Examples:` section.
 4. A new prompt version is saved automatically.
 
-You provide the dataset; the tool picks the examples. The result is a prompt that performs better with minimal effort.
+You provide quality examples; the tool selects the most effective ones.
 
 ## Development & Testing
 
 ```bash
-# Run test suite
+# Run test suite (after setup)
 ./scripts/test_all.sh
 
 # Or manually
@@ -153,7 +168,7 @@ source .venv/bin/activate
 pytest -v --cov=promptterfly --cov-report=term-missing
 ```
 
-Project structure and architecture are documented in `docs/development.md`.
+Architecture and implementation details are in `docs/development.md`.
 
 ## Requirements
 
