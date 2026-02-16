@@ -1,8 +1,8 @@
 """Prompt management commands."""
 import typer
+import re
 from typing import Optional
 from pathlib import Path
-from difflib import SequenceMatcher
 from promptterfly.core.models import Prompt
 from promptterfly.storage.prompt_store import PromptStore
 from promptterfly.utils.io import find_project_root
@@ -14,9 +14,49 @@ app = typer.Typer(help="Manage prompts")
 
 # Removed random ID generation; now using sequential integers via store._next_id()
 
-def _similarity(a: str, b: str) -> float:
-    """Compute similarity ratio between two strings (0-1)."""
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
+def _tokenize(s: str) -> set:
+    """Extract lowercase alphanumeric words from a string."""
+    return set(re.findall(r'\b\w+\b', s.lower()))
+
+def _score_prompt(query: str, prompt: Prompt) -> float:
+    """
+    Compute a weighted match score between query and a prompt.
+    - Exact name match: 1.0
+    - Name tokens: 0.6 * (overlap fraction)
+    - Description tokens: 0.3 * (overlap fraction)
+    - Template tokens (≥2 matches): 0.05 * (overlap fraction) * 2^(count-1)
+    Scores are capped at 1.0.
+    """
+    q_tokens = _tokenize(query)
+    if not q_tokens:
+        return 0.0
+    len_q = len(q_tokens)
+
+    # Exact name match (case-insensitive, stripped)
+    if prompt.name.strip().lower() == query.strip().lower():
+        return 1.0
+
+    # Name score
+    name_tokens = _tokenize(prompt.name)
+    name_match = len(q_tokens & name_tokens)
+    score_name = (name_match / len_q) * 0.6
+
+    # Description score
+    desc_tokens = _tokenize(prompt.description or "")
+    desc_match = len(q_tokens & desc_tokens)
+    score_desc = (desc_match / len_q) * 0.3
+
+    # Template score: only if at least 2 matching words
+    template_tokens = _tokenize(prompt.template)
+    temp_match = len(q_tokens & template_tokens)
+    score_temp = 0.0
+    if temp_match >= 2:
+        base = (temp_match / len_q) * 0.05
+        exponential = 2 ** (temp_match - 1)
+        score_temp = base * exponential
+
+    total = score_name + score_desc + score_temp
+    return min(total, 1.0)
 
 
 def _get_store():
@@ -175,7 +215,12 @@ def render(prompt_id: int, vars_file: Optional[Path] = typer.Argument(None)):
 def find(query: str):
     """
     Fuzzy search prompts by name, description, and template.
-    If the best match is confident, it is shown immediately.
+    Scoring:
+      - Exact name match: 1.0 (auto-select)
+      - Name token overlap: high weight
+      - Description token overlap: medium weight
+      - Template token matches (≥2 words): low base * exponential
+    If the best score ≥ 0.8, it is shown immediately.
     Otherwise, the top 3 candidates are presented for selection.
     """
     store = _get_store()
@@ -184,16 +229,10 @@ def find(query: str):
         print_error("No prompts found.")
         raise typer.Exit(1)
 
-    # Score each prompt by similarity across name, description, template
+    # Score each prompt
     scored = []
     for p in prompts:
-        # Combine searchable text fields
-        combined = " ".join([
-            p.name,
-            p.description or "",
-            p.template
-        ])
-        score = _similarity(query, combined)
+        score = _score_prompt(query, p)
         scored.append((score, p))
 
     # Sort descending by score
@@ -211,8 +250,10 @@ def find(query: str):
     typer.echo(f"Top matches (best score: {top_score:.0%}):")
     rows = []
     for i, (score, p) in enumerate(scored[:3], start=1):
-        desc_snippet = (p.description or p.template[:40] + "..." if len(p.template) > 40 else p.template)
-        rows.append([i, p.id, p.name, f"{score:.0%}", desc_snippet])
+        preview = p.description or p.template[:40]
+        if len(p.template) > 40:
+            preview = preview if p.description else p.template[:40] + "..."
+        rows.append([i, p.id, p.name, f"{score:.0%}", preview])
     print_table(["#", "ID", "Name", "Score", "Preview"], rows, title="Results")
     typer.echo("Enter the number (1-3) of the prompt to view, or press Enter to cancel.")
     choice = typer.prompt("", default="")

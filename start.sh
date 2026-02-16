@@ -35,6 +35,18 @@ if ! python -c "import promptterfly" > /dev/null 2>&1; then
     exit 1
 fi
 
+# Auto-initialize project if not already in one (skip if the command itself is "init")
+should_auto_init=true
+if [ $# -gt 0 ] && [ "$1" = "init" ]; then
+    should_auto_init=false
+fi
+if $should_auto_init; then
+    if ! promptterfly config > /dev/null 2>&1; then
+        log_info "No Promptterfly project found. Initializing in current directory..."
+        promptterfly init
+    fi
+fi
+
 # If arguments are provided, run the command directly via the promptterfly CLI
 if [ $# -gt 0 ]; then
     exec promptterfly "$@"
