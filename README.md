@@ -6,11 +6,13 @@ A self-evolving prompt manager that automatically optimizes your prompts — sma
 
 ---
 
+## Why Promptterfly?
+
+- **No Git required** – automatic local versioning with snapshots
 - **DSPy-powered optimization** – improve prompts with few-shot learning in one command
 - **Zero hassle setup** – one script installs, another launches
 - **Model-agnostic** – configure any LLM provider (OpenAI, Anthropic, etc.)
 - **Terminal-native** – works where you work, rich TUI, no web app
----
 
 ## Installation
 
@@ -27,22 +29,30 @@ It will:
 
 ## Usage
 
-After installation, launch an interactive shell with Promptterfly ready:
+After installation, launch the interactive Promptterfly shell:
 
 ```bash
 ./start.sh
 ```
 
-This opens a shell with the virtual environment activated. Inside, run `promptterfly` commands:
+Inside the REPL, type commands **without** the `promptterfly` prefix:
 
-```bash
-promptterfly --help
-promptterfly init
-promptterfly prompt create
-promptterfly optimize improve <id>
+```text
+❯ help
+❯ init
+❯ prompt create
+❯ optimize improve myprompt
+❯ version history myprompt
+❯ exit
 ```
 
-You can also pass a command directly:
+The REPL features:
+- Colored banner with a random programmer quote each start
+- Onboarding tips on first run
+- Context-sensitive hints (e.g., after `prompt create`, suggests optimization)
+- Ctrl+C friendly; returns to prompt
+
+You can also run a single command directly:
 
 ```bash
 ./start.sh prompt list
@@ -59,28 +69,28 @@ promptterfly --help
 ## Quick Start
 
 ```bash
-# Inside the start.sh shell:
+# Inside the REPL:
 
 # Initialize in your project
-promptterfly init
+init
 
 # Create a prompt (interactive)
-promptterfly prompt create
+prompt create
 
 # List prompts
-promptterfly prompt list
+prompt list
 
 # Render a prompt with variables
-promptterfly render <prompt_id> variables.json
+render <prompt_id> variables.json
 
 # Optimize it (uses DSPy + your configured model)
-promptterfly optimize improve <prompt_id> --strategy few_shot
+optimize improve <prompt_id> --strategy few_shot
 
 # View version history
-promptterfly version history <prompt_id>
+version history <prompt_id>
 
 # Restore a previous version
-promptterfly version restore <prompt_id> 1
+version restore <prompt_id> 1
 ```
 
 ## Configuration
@@ -94,9 +104,9 @@ prompts_dir: prompts
 optimization: {}
 ```
 
-You can edit it directly or use `promptterfly config set <key> <value>`.
+You can edit it directly or use `config set <key> <value>`.
 
-**Model registry:** Add models via `promptterfly model add` and set a default. LiteLLM integration means any supported provider works (OpenAI, Anthropic, Google, Together, local, etc.).
+**Model registry:** Add models via `model add` and set a default. LiteLLM integration means any supported provider works (OpenAI, Anthropic, Google, Together, local, etc.).
 
 ## Storage Layout
 
@@ -144,7 +154,7 @@ Plain files, no Git required.
 - `config show` – print configuration
 - `config set <key> <value>` – update configuration
 
-Run `promptterfly --help` or `promptterfly <command> --help` for details.
+Run `help` inside the REPL or `promptterfly --help` for full details.
 
 ## How Optimization Works
 

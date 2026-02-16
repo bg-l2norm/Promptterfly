@@ -82,6 +82,19 @@ def show_onboarding():
     console.print("  5. View history:            [yellow]version history <id>[/yellow]")
     console.print("\nAll commands work without the 'promptterfly' prefix.\n")
 
+def show_context_tip(command: str):
+    """Show context-sensitive tips after certain commands."""
+    tips = {
+        "prompt create": "Next: try 'optimize improve <id>' to enhance your prompt.",
+        "optimize improve": "Tip: add a dataset at .promptterfly/dataset.jsonl for better results.",
+        "version history": "To rollback: 'version restore <id> <version>'.",
+        "init": "Now create a prompt: 'prompt create' and add a model: 'model add'.",
+        "model add": "Don't forget to 'model set-default <name>' for optimization.",
+    }
+    tip = tips.get(command)
+    if tip:
+        console.print(f"[dim]💡 {tip}[/dim]\n")
+
 def repl_loop():
     """Main REPL loop."""
     print_header()
@@ -116,20 +129,19 @@ def repl_loop():
 
         # Dispatch to Typer CLI programmatically
         try:
-            # Find project root if needed (for commands that require it)
-            # We'll let Typer handle it; just pass through
-            from promptterfly.core.config import load_config
             # Ensure project root discovery works from cwd
-            # Call the Typer app with the command line
             sys.argv = ["promptterfly"] + parts
-            # Clear any previous state; call app
             app()
+            # After successful execution, show context tip if applicable
+            full_cmd = " ".join(parts)
+            show_context_tip(full_cmd)
         except SystemExit as e:
-            # Typer calls sys.exit; we continue unless it's an error we want to break on
-            # Non-zero exit indicates error; we just continue REPL
             if e.code != 0:
-                # Error already printed by Typer; continue
-                pass
+                pass  # error already shown
+            else:
+                # success, maybe show tip
+                full_cmd = " ".join(parts)
+                show_context_tip(full_cmd)
         except Exception as e:
             console.print(f"[red]Error:[/red] {e}")
 
