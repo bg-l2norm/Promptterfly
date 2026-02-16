@@ -1,12 +1,9 @@
 # Promptterfly
 
-<<<<<<< HEAD
 A self-evolving prompt manager that automatically optimizes your prompts — smart, easy access, and always improving.
 
 ---
 
-**Contact:** [bengeorge1001@gmail.com](mailto:bengeorge1001@gmail.com)
-=======
 A local CLI tool for managing and optimizing prompts with simple versioning and model-based optimization. Designed as a lightweight, terminal-first application with file-based persistence — no Git required.
 
 ## Features
