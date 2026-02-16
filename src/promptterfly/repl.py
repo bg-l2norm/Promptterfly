@@ -44,10 +44,32 @@ def print_header():
     console.print("Type [bold]'help'[/bold] for available commands, or [bold]'exit'[/bold] to quit.\n")
 
 def print_help():
-    """Print a concise help listing."""
-    console.print("\n[bold cyan]Quick commands[/bold cyan] (use without prefix):")
-    console.print("  ls, new, show <id>, del, run, find <q>, hist, restore, opt, models, addmodel, setmodel, init, config, help, exit")
-    console.print("\n[dim]Run 'help' inside REPL for full command list. See README for usage details.[/dim]\n")
+    """Print a clear, descriptive help listing."""
+    console.print("\n[bold cyan]Commands[/bold cyan] (you can type these directly in the REPL):")
+    
+    commands = [
+        ("init [--path dir]", "Initialize a project in current/specified directory"),
+        ("ls", "List all prompts"),
+        ("new / create", "Create a new prompt interactively"),
+        ("show <id>", "Show prompt details (ID from list)"),
+        ("del <id>", "Delete a prompt"),
+        ("run <id> [vars.json]", "Render a prompt with optional variables"),
+        ("find <query> / search / f", "Fuzzy search prompts; auto-select best or choose from top 3"),
+        ("hist <id>", "Show version history for a prompt"),
+        ("restore <id> <version>", "Restore a prompt to a previous version"),
+        ("opt <id> [--strategy few_shot] [--dataset path]", "Run optimization to improve a prompt"),
+        ("models / ls-models", "List configured models"),
+        ("addmodel", "Add a new model (interactive prompts)"),
+        ("setmodel <name>", "Set the default model"),
+        ("config show", "Show current configuration"),
+        ("config set <key> <value>", "Set a configuration value"),
+        ("help", "Show this help"),
+        ("exit / quit", "Exit the REPL"),
+    ]
+    
+    for cmd, desc in commands:
+        console.print(f"  [yellow]{cmd}[/yellow] – {desc}")
+    console.print("")
 
 def detect_first_run() -> bool:
     """Check if this is the first REPL run."""

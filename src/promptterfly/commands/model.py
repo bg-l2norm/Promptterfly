@@ -58,14 +58,22 @@ def get_default_model_name(project_root: Path) -> str:
 
 @app.command("add")
 def add_model_cmd(
-    name: str = typer.Argument(..., help="Model name (identifier)"),
-    provider: str = typer.Option(..., "--provider", "-p", help="Provider: openai, anthropic, etc."),
-    model: str = typer.Option(..., "--model", "-m", help="Model identifier (e.g. gpt-4, claude-3-opus)"),
+    name: Optional[str] = typer.Argument(None, help="Model name (identifier)"),
+    provider: Optional[str] = typer.Option(None, "--provider", "-p", help="Provider: openai, anthropic, etc."),
+    model: Optional[str] = typer.Option(None, "--model", "-m", help="Model identifier (e.g. gpt-4, claude-3-opus)"),
     api_key_env: Optional[str] = typer.Option(None, "--api-key-env", help="Environment variable name for API key"),
     temperature: float = typer.Option(0.7, "--temperature", min=0.0, max=2.0),
     max_tokens: int = typer.Option(1024, "--max-tokens", min=1)
 ):
     """Add a new model to the registry."""
+    # Interactive prompts for missing arguments
+    if name is None:
+        name = typer.prompt("Model name")
+    if provider is None:
+        provider = typer.prompt("Provider", default="openai")
+    if model is None:
+        model = typer.prompt("Model identifier", default="gpt-4")
+    # api_key_env remains optional (can be None)
     try:
         from promptterfly.utils.io import find_project_root
         project_root = find_project_root()
