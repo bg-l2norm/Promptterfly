@@ -44,51 +44,10 @@ def print_header():
     console.print("Type [bold]'help'[/bold] for available commands, or [bold]'exit'[/bold] to quit.\n")
 
 def print_help():
-    """Print a minimal help listing."""
-    console.print("\n[bold cyan]Available commands[/bold cyan] (use without prefix):")
-    console.print("  The REPL shows a colorful startup banner and spiky loading animation during optimization.\n")
-    
-    # First show aliases for quick reference
-    console.print("[bold]Command aliases:[/bold]")
-    console.print("  ls           → prompt list")
-    console.print("  new, create  → prompt create")
-    console.print("  show <id>    → prompt show <id>")
-    console.print("  del          → prompt delete")
-    console.print("  run          → prompt render")
-    console.print("  find / search / f → prompt find <query>")
-    console.print("  hist         → version history")
-    console.print("  restore      → version restore")
-    console.print("  opt          → optimize improve")
-    console.print("  models       → model list")
-    console.print("  addmodel     → model add")
-    console.print("  setmodel     → model set-default")
-    console.print("")
-
-    commands = [
-        ("init [--path dir]", "Initialize project"),
-        ("prompt list", "List prompts"),
-        ("prompt show <id>", "Show prompt"),
-        ("prompt create", "Create prompt interactively"),
-        ("prompt update <id>", "Update prompt"),
-        ("prompt delete <id>", "Delete prompt"),
-        ("prompt render <id> [vars.json]", "Render with variables"),
-        ("prompt find <query>", "Fuzzy search prompts (auto-select best or list top 3)"),
-        ("version history <id>", "Show version history"),
-        ("version restore <id> <version>", "Restore version"),
-        ("optimize improve <id> [--strategy few_shot] [--dataset path]", "Run optimization"),
-        ("model list", "List configured models"),
-        ("model add <name>", "Add model"),
-        ("model remove <name>", "Remove model"),
-        ("model set-default <name>", "Set default model"),
-        ("config show", "Show configuration"),
-        ("config set <key> <value>", "Set config value"),
-        ("help", "Show this help"),
-        ("exit / quit", "Exit REPL"),
-    ]
-    console.print("[bold]Full command list:[/bold]")
-    for cmd, desc in commands:
-        console.print(f"  [yellow]{cmd}[/yellow] – {desc}")
-    console.print("")
+    """Print a concise help listing."""
+    console.print("\n[bold cyan]Quick commands[/bold cyan] (use without prefix):")
+    console.print("  ls, new, show <id>, del, run, find <q>, hist, restore, opt, models, addmodel, setmodel, init, config, help, exit")
+    console.print("\n[dim]Run 'help' inside REPL for full command list. See README for usage details.[/dim]\n")
 
 def detect_first_run() -> bool:
     """Check if this is the first REPL run."""

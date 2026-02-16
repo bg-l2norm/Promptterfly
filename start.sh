@@ -42,7 +42,7 @@ if [ $# -gt 0 ] && [ "$1" = "init" ]; then
 fi
 if $should_auto_init; then
     if ! promptterfly config > /dev/null 2>&1; then
-        log_info "No Promptterfly project found. Initializing in current directory..."
+        log_info "Initializing Promptterfly..."
         promptterfly init
     fi
 fi
