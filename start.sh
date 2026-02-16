@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Promptterfly Start Script
-# Launches the interactive REPL with the virtual environment activated.
+# Launches the interactive REPL or runs a single command.
 # For first-time setup, run ./setup.sh first.
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -35,12 +35,10 @@ if ! python -c "import promptterfly" > /dev/null 2>&1; then
     exit 1
 fi
 
-# If arguments are provided, pass them to the REPL as commands
-# The REPL will execute them and exit
+# If arguments are provided, run the command directly via the promptterfly CLI
 if [ $# -gt 0 ]; then
-    python -m promptterfly.repl -- "$@"
-    exit $?
+    exec promptterfly "$@"
 fi
 
 # Otherwise, start interactive REPL
-python -m promptterfly.repl
+python -c "from promptterfly.repl import main; main()"

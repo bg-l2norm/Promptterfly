@@ -6,24 +6,24 @@ console = Console()
 def get_butterfly_banner() -> str:
     """
     Returns a starry, color-themed ASCII art banner of a butterfly with sparkles.
-    The design is compact (~40 columns) and uses regular spaces for reliable rendering.
-    Sparkles are placed above and below the butterfly.
+    The butterfly is compact and recognizable. Sparkles appear above and below.
     """
     # Top sparkles
     top = (
         "[purple]✦[/purple]" + " " * 38 + "[yellow]✧[/yellow]\n"
         "[purple]✧[/purple]" + " " * 38 + "[yellow]✨[/yellow]\n"
     )
-    # Butterfly art (alternating cyan and magenta)
+    # Butterfly art (9 lines)
     art = """\
 [cyan]       .-.[/cyan]
 [magenta]     .'   `.[/magenta]
 [cyan]    /       \\[/cyan]
 [magenta]   ;         ;[/magenta]
 [cyan]   |    •    |[/cyan]
-[magenta]   ;       /[/magenta]
-[cyan]     `.   .'[/cyan]
-[magenta]       `-'[/magenta]
+[magenta]   ;         ;[/magenta]
+[cyan]    \\       /[/cyan]
+[magenta]     `.   .'[/magenta]
+[cyan]       `-'[/cyan]
 """
     # Bottom sparkles
     bottom = (

@@ -94,7 +94,7 @@ class PromptStore:
         """
         data = self._prompt_to_dict(prompt)
         target_path = self.get_prompt_path(prompt.id)
-        atomic_write_json(data, target_path)
+        atomic_write_json(target_path, data)
 
     def load_prompt(self, prompt_id: str) -> Prompt:
         """
@@ -186,7 +186,7 @@ class PromptStore:
 
         # Write snapshot
         version_path = versions_dir / f"{next_version:03d}.json"
-        atomic_write_json(snapshot, version_path)
+        atomic_write_json(version_path, snapshot)
 
     def delete_prompt(self, prompt_id: str) -> None:
         """
