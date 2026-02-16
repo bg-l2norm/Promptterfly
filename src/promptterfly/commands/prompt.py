@@ -107,6 +107,16 @@ def create():
     typer.echo("Creating a new prompt")
     name = typer.prompt("Name")
     description = typer.prompt("Description (Optional)", default="")
+    store = _get_store()
+    # Ensure unique name (auto-append _N if duplicate)
+    existing_names = {p.name for p in store.list_prompts()}
+    base_name = name
+    counter = 1
+    while name in existing_names:
+        counter += 1
+        name = f"{base_name}_{counter}"
+    if counter > 1:
+        typer.echo(f"Name already exists, using '{name}' instead.")
     typer.echo("\nEnter template (use {variables} for formatting).")
     typer.echo("Variables are supplied at render time via a JSON file.")
     typer.echo("--- begin template ---")
@@ -122,7 +132,6 @@ def create():
     if not template:
         print_error("Template cannot be empty")
         raise typer.Exit(1)
-    store = _get_store()
     prompt_id = store._next_id()
     now = datetime.now()
     prompt = Prompt(
@@ -152,6 +161,15 @@ def update(prompt_id: int):
     typer.echo("Leave blank to keep current value.")
     name = typer.prompt("Name", default=p.name)
     description = typer.prompt("Description (Optional)", default=p.description or "")
+    # Ensure name uniqueness (exclude current prompt)
+    existing_names = {other.name for other in store.list_prompts() if other.id != p.id}
+    base_name = name
+    counter = 1
+    while name in existing_names:
+        counter += 1
+        name = f"{base_name}_{counter}"
+    if counter > 1:
+        typer.echo(f"Name conflicts with existing prompt, using '{name}' instead.")
     typer.echo("Enter new template (Ctrl+D to keep current).")
     typer.echo("--- begin template ---")
     lines = []

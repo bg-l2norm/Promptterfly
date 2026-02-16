@@ -29,11 +29,19 @@ ALIAS_MAP = {
     "restore": ["version", "restore"],
     "opt": ["optimize", "improve"],
     "models": ["model", "list"],
-    "addmodel": ["model", "add"],
-    "setmodel": ["model", "set-default"],
+    # removed "addmodel", "setmodel" in favor of multi-word aliases below
     "find": ["prompt", "find"],
     "search": ["prompt", "find"],
     "f": ["prompt", "find"],
+}
+
+# Multi-word aliases (natural verb-noun phrasing)
+MULTI_ALIASES = {
+    "add model": ["model", "add"],
+    "remove model": ["model", "remove"],
+    "list models": ["model", "list"],
+    "set model": ["model", "set-default"],
+    "config set": ["config-set"],
 }
 
 def print_header():
@@ -45,24 +53,25 @@ def print_header():
 
 def print_help():
     """Print a clear, descriptive help listing."""
-    console.print("\n[bold cyan]Commands[/bold cyan] (you can type these directly in the REPL):")
+    console.print("\n[bold cyan]Commands[/bold cyan] (type directly in the REPL):")
     
     commands = [
-        ("init [--path dir]", "Initialize a project in current/specified directory"),
-        ("ls", "List all prompts"),
-        ("new / create", "Create a new prompt interactively"),
-        ("show <id>", "Show prompt details (ID from list)"),
-        ("del <id>", "Delete a prompt"),
-        ("run <id> [vars.json]", "Render a prompt with optional variables"),
-        ("find <query> / search / f", "Fuzzy search prompts; auto-select best or choose from top 3"),
-        ("hist <id>", "Show version history for a prompt"),
-        ("restore <id> <version>", "Restore a prompt to a previous version"),
-        ("opt <id> [--strategy few_shot] [--dataset path]", "Run optimization to improve a prompt"),
-        ("models / ls-models", "List configured models"),
-        ("addmodel", "Add a new model (interactive prompts)"),
-        ("setmodel <name>", "Set the default model"),
+        ("init [--path dir]", "Initialize a project"),
+        ("prompt list (ls)", "List all prompts"),
+        ("prompt create (new/create)", "Create a new prompt interactively"),
+        ("prompt show <id> (show)", "Show prompt details"),
+        ("prompt delete <id> (del)", "Delete a prompt"),
+        ("prompt render <id> [vars.json] (run)", "Render a prompt with variables"),
+        ("prompt find <query> (find/search/f)", "Fuzzy search prompts"),
+        ("version history <id> (hist)", "Show prompt version history"),
+        ("version restore <id> <version> (restore)", "Restore a prompt version"),
+        ("optimize improve <id> (opt)", "Run optimization to improve a prompt"),
+        ("model list (models/list models)", "List configured models"),
+        ("model add (add model)", "Add a new model (interactive prompts)"),
+        ("model remove <name> (remove model)", "Remove a model"),
+        ("model set-default <name> (set model)", "Set the default model"),
         ("config show", "Show current configuration"),
-        ("config set <key> <value>", "Set a configuration value"),
+        ("config set <key> <value> (config set)", "Set a configuration value"),
         ("help", "Show this help"),
         ("exit / quit", "Exit the REPL"),
     ]
@@ -135,14 +144,24 @@ def repl_loop():
             print_help()
             continue
 
-        # Resolve aliases before dispatching
-        if command in ALIAS_MAP:
-            replacement = ALIAS_MAP[command]
-            # For 'show' and commands that take an immediate argument, keep the rest
-            if command == "show" and len(parts) > 1:
-                parts = replacement + parts[1:]
-            else:
-                parts = replacement + parts[1:]
+        # Resolve multi-word aliases first (e.g., "add model")
+        matched = False
+        for n in (3, 2):  # check longer phrases first
+            if len(parts) >= n:
+                phrase = " ".join(parts[:n])
+                if phrase in MULTI_ALIASES:
+                    replacement = MULTI_ALIASES[phrase]
+                    parts = replacement + parts[n:]
+                    matched = True
+                    break
+        if not matched:
+            # Single-word alias
+            if command in ALIAS_MAP:
+                replacement = ALIAS_MAP[command]
+                if command == "show" and len(parts) > 1:
+                    parts = replacement + parts[1:]
+                else:
+                    parts = replacement + parts[1:]
 
         # Dispatch to Typer CLI programmatically
         try:
