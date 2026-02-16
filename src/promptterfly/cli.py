@@ -63,14 +63,18 @@ def init(
         set_now = False
         console.print("[dim]Local provider detected; skipping API key setup.[/dim]")
     else:
-        # API key environment variable name
-        default_env = f"{provider.upper()}_API_KEY"
-        api_key_env = typer.prompt("API key environment variable name", default=default_env)
+        # For cloud providers, use standard env var name automatically (no prompt)
+        api_key_env = f"{provider.upper()}_API_KEY"
         # Offer to set API key now
         set_now = typer.confirm("Set your API key now? (Recommended)", default=True)
 
     if set_now:
-        key = typer.prompt(f"{provider} API key", hide_input=True)
+        # Prompt for API key; require non‑empty input with clear error
+        while True:
+            key = typer.prompt(f"{provider} API key", hide_input=True).strip()
+            if key:
+                break
+            console.print("[red]API key cannot be empty. Please try again.[/red]")
         dotenv_path = project_root / ".env"
         # Ensure .gitignore has .env
         gitignore_path = project_root / ".gitignore"

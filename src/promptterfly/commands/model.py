@@ -17,43 +17,42 @@ from promptterfly.utils.tui import print_table, print_success, print_error
 console = Console()
 
 # Default provider-model mapping for interactive selection.
-# Non‑local providers have curated model lists.
-# For local providers (e.g., local, ollama, llamacpp), the list is empty, so the user will be prompted to type the model name directly.
+# Non‑local providers have curated model lists with recent releases.
+# For local providers (e.g., local), the list is empty, so the user will be prompted to type the model name directly.
 DEFAULT_PROVIDER_MODELS = {
-    # Major providers
+    # Major providers – recent models
     "openai": [
-        "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo",
-        "text-davinci-003", "davinci", "curie", "babbage", "ada"
+        "gpt-4.5-preview", "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4", "gpt-3.5-turbo"
     ],
     "anthropic": [
-        "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307",
-        "claude-2.1", "claude-2.0", "claude-instant-1.2"
+        "claude-3-7-sonnet-20250219", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307",
+        "claude-2.1"
     ],
     "google": [
-        "gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro", "gemini-pro-vision"
+        "gemini-2.0-flash-001", "gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro", "gemini-pro-vision"
     ],
     "mistral": [
-        "mistral-large-latest", "mistral-medium", "mistral-small", "mistral-7b-instruct"
+        "mistral-large-latest", "mistral-medium", "mistral-small", "open-mixtral-8x22b"
     ],
     "cohere": [
-        "command-r-plus", "command-r", "command", "command-light", "command-medium"
+        "command-r-plus", "command-r", "command"
     ],
     "groq": [
-        "llama3-70b-8192", "llama3-8b-8192", "mixtral-8x7b-32768", "gemma2-9b-it"
+        "llama3.3-70b-versatile", "llama3-70b-8192", "llama3-8b-8192", "mixtral-8x7b-32768", "gemma2-9b-it"
     ],
     "grok": [
-        "grok-x-latest", "grok-beta"
+        "grok-2-latest", "grok-beta"
     ],
     "openrouter": [
         "openrouter/quasar-alpha", "openrouter/anthracite-02b", "openrouter/phi-3-medium-128k"
     ],
     "together": [
-        "togethercomputer/llama-2-70b-chat", "togethercomputer/llama-2-13b-chat"
+        "togethercomputer/llama-3.2-90b-text-preview", "togethercomputer/llama-2-70b-chat"
     ],
     "anyscale": [
-        "anyscale/meta-llama/Llama-2-7b-chat-hf", "anyscale/meta-llama/Llama-2-13b-chat-hf"
+        "anyscale/meta-llama/Llama-3.2-90b-Text-Preview", "anyscale/meta-llama/Llama-2-70b-chat-hf"
     ],
-    # Local providers: empty lists indicate user should type the model name directly.
+    # Local provider: empty list indicates user should type the model name directly.
     "local": [],
 }
 
@@ -264,22 +263,27 @@ def add_model_cmd(
         suggested = f"{final_provider}-{final_model}".replace("/", "-")
         final_name = typer.prompt("Model config name", default=suggested)
 
-    # Determine api_key_env
+    # Determine api_key_env and set_now based on provider
     final_api_key_env = api_key_env
-    if final_api_key_env is None:
-        default_env = f"{final_provider.upper()}_API_KEY"
-        final_api_key_env = typer.prompt("API key environment variable name", default=default_env)
+    if final_provider in ("local", "ollama", "llamacpp"):
+        final_api_key_env = None
+        set_now = False
+    else:
+        if final_api_key_env is None:
+            final_api_key_env = f"{final_provider.upper()}_API_KEY"
+        set_now = typer.confirm("Set your API key now? (Recommended)", default=True)
 
-    # Offer to set the API key now
-    set_now = typer.confirm("Set your API key now? (Recommended)", default=True)
     if set_now:
-        key = typer.prompt(f"{final_provider} API key", hide_input=True)
+        while True:
+            key = typer.prompt(f"{final_provider} API key", hide_input=True).strip()
+            if key:
+                break
+            console.print("[red]API key cannot be empty. Please try again.[/red]")
         dotenv_path = project_root / ".env"
         ensure_dotenv_gitignore(project_root)
         if dotenv_path.exists():
             existing = dotenv_path.read_text(encoding="utf-8")
             lines = existing.splitlines()
-            # Check if any line starts with the env var name (ignoring leading whitespace)
             if any(line.strip().startswith(f"{final_api_key_env}=") for line in lines):
                 console.print(f"[yellow]{final_api_key_env} already exists in .env. Skipping.[/yellow]")
             else:
