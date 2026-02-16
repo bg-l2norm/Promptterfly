@@ -11,6 +11,7 @@ class ModelConfig(BaseModel):
     provider: str = Field(..., description="Provider: openai, anthropic, etc.")
     model: str = Field(..., description="Model name (e.g. gpt-4, claude-3-opus)")
     api_key_env: Optional[str] = Field(None, description="Env var name for API key")
+    base_url: Optional[str] = Field(None, description="Base URL for local or custom endpoints")
     temperature: float = Field(0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(1024, gt=0)
     metadata: Dict[str, Any] = Field(default_factory=dict)

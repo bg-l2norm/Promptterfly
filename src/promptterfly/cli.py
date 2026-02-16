@@ -41,6 +41,10 @@ def init(
 
     console.print("\n[bold]Configure your first LLM model:[/bold]")
     provider = interactive_provider_selection()
+    base_url = None
+    if provider in {"local", "ollama", "llamacpp"}:
+        default_url = "http://localhost:11434" if provider == "ollama" else "http://localhost:5000"
+        base_url = typer.prompt("Local server base URL", default=default_url)
     model_id = interactive_model_selection(provider)
     # Normalize model identifier: strip provider prefix if present
     if "/" in model_id:
@@ -54,8 +58,7 @@ def init(
     console.print(f"[dim]Using model configuration name: {name}[/dim]")
 
     # Determine if provider is local (no API key needed)
-    LOCAL_PROVIDERS = {"local", "ollama", "llamacpp"}
-    if provider in LOCAL_PROVIDERS:
+    if provider in {"local", "ollama", "llamacpp"}:
         api_key_env = None
         set_now = False
         console.print("[dim]Local provider detected; skipping API key setup.[/dim]")
@@ -63,7 +66,6 @@ def init(
         # API key environment variable name
         default_env = f"{provider.upper()}_API_KEY"
         api_key_env = typer.prompt("API key environment variable name", default=default_env)
-
         # Offer to set API key now
         set_now = typer.confirm("Set your API key now? (Recommended)", default=True)
 
@@ -103,6 +105,7 @@ def init(
         provider=provider,
         model=model_id,
         api_key_env=api_key_env,
+        base_url=base_url,
     )
     try:
         add_model(model_cfg, project_root)

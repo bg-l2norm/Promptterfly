@@ -212,6 +212,7 @@ def add_model_cmd(
     provider: Optional[str] = typer.Option(None, "--provider", "-p", help="Provider: openai, anthropic, etc."),
     model: Optional[str] = typer.Option(None, "--model", "-m", help="Model identifier (e.g. gpt-4, anthropic/claude-3-opus)"),
     api_key_env: Optional[str] = typer.Option(None, "--api-key-env", help="Environment variable name for API key"),
+    base_url: Optional[str] = typer.Option(None, "--base-url", help="Base URL for local API endpoints (e.g., http://localhost:11434)"),
     temperature: float = typer.Option(0.7, "--temperature", min=0.0, max=2.0),
     max_tokens: int = typer.Option(1024, "--max-tokens", min=1)
 ):
@@ -290,11 +291,18 @@ def add_model_cmd(
                 f.write(f"{final_api_key_env}={key}\n")
             console.print(f"✅ Created .env with API key at {dotenv_path}")
 
+    # Handle local provider base URL if not provided
+    final_base_url = base_url
+    if final_provider in ("local", "ollama", "llamacpp") and final_base_url is None:
+        default_url = "http://localhost:11434" if final_provider == "ollama" else "http://localhost:5000"
+        final_base_url = typer.prompt("Local server base URL", default=default_url)
+
     config = ModelConfig(
         name=final_name,
         provider=final_provider,
         model=final_model,
         api_key_env=final_api_key_env,
+        base_url=final_base_url,
         temperature=temperature,
         max_tokens=max_tokens
     )
