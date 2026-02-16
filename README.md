@@ -112,25 +112,6 @@ The interactive shell (`./start.sh`) offers a richer experience:
 
 Type `help` inside the REPL to see all commands and aliases.
 
-### Visual Experience
-
-Promptterfly's REPL is designed to be both informative and delightful:
-
-- **Startup Banner**: A colorful ASCII art butterfly with sparkles greets you on launch, accompanied by a random programmer quote.
-- **Spiky Loading Animation**: During optimization (and other long-running operations), a custom "spiky" spinner made of Braille characters pulses.
-- **Rich Terminal UI**: Tables, colored text, and panels enhance readability.
-
-Example banner:
-```
-        ✦   ✧
-    ✦     ⋆
-    ✧   ✨
-        ...
-[bold cyan]╔═══════════════════════════════════════════════════╗[/bold cyan]
-[bold cyan]║[/bold cyan]  [bold magenta]    __  __  ____   ___  ____   ____ ___ [/bold magenta]  [bold cyan]║[/bold cyan]
-...
-```
-
 ---
 
 ## Quick Reference
