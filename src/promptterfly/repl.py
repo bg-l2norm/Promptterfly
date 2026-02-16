@@ -65,14 +65,8 @@ def mark_first_run():
     flag.touch()
 
 def show_onboarding():
-    """Show quick start tips on first run."""
-    console.print("\n[bold green]Quick Start:[/bold green]")
-    console.print("  1. Navigate to your project directory")
-    console.print("  2. Run [bold]init[/bold] once:  [yellow]init[/yellow]")
-    console.print("  3. Create a prompt:         [yellow]prompt create[/yellow]")
-    console.print("  4. Optimize it:             [yellow]optimize improve <id>[/yellow]")
-    console.print("  5. View history:            [yellow]version history <id>[/yellow]")
-    console.print("\nAll commands work without the 'promptterfly' prefix.\n")
+    """Show first-run tip."""
+    console.print("[dim]Tip: If you haven't initialized a project, run 'init' to get started.[/dim]\n")
 
 def show_context_tip(command: str):
     """Show context-sensitive tips after certain commands."""

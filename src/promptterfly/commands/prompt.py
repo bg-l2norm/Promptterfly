@@ -1,6 +1,7 @@
 """Prompt management commands."""
 import typer
 from typing import Optional
+from pathlib import Path
 from promptterfly.core.models import Prompt
 from promptterfly.storage.prompt_store import PromptStore
 from promptterfly.utils.io import find_project_root
