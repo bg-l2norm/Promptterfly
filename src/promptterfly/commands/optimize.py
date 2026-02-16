@@ -15,7 +15,7 @@ app = typer.Typer(help="Optimize prompts")
 
 @app.command("improve")
 def improve(
-    prompt_id: str,
+    prompt_id: int,
     strategy: str = typer.Option("few_shot", "--strategy", help="Optimization strategy (default: few_shot)"),
     dataset: Optional[Path] = typer.Option(None, "--dataset", help="Path to dataset JSONL file")
 ):

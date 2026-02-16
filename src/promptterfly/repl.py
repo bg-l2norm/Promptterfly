@@ -17,6 +17,22 @@ console = Console()
 
 from promptterfly.utils.banner import print_banner
 
+# Command aliases - map short forms to full command sequences
+ALIAS_MAP = {
+    "ls": ["prompt", "list"],
+    "new": ["prompt", "create"],
+    "create": ["prompt", "create"],
+    "show": ["prompt", "show"],  # preserves following argument as ID
+    "del": ["prompt", "delete"],
+    "run": ["prompt", "render"],
+    "hist": ["version", "history"],
+    "restore": ["version", "restore"],
+    "opt": ["optimize", "improve"],
+    "models": ["model", "list"],
+    "addmodel": ["model", "add"],
+    "setmodel": ["model", "set-default"],
+}
+
 def print_header():
     """Print welcome banner and a random quote."""
     print_banner()
@@ -28,6 +44,22 @@ def print_help():
     """Print a minimal help listing."""
     console.print("\n[bold cyan]Available commands[/bold cyan] (use without prefix):")
     console.print("  The REPL shows a colorful startup banner and spiky loading animation during optimization.\n")
+    
+    # First show aliases for quick reference
+    console.print("[bold]Command aliases:[/bold]")
+    console.print("  ls           → prompt list")
+    console.print("  new, create  → prompt create")
+    console.print("  show <id>    → prompt show <id>")
+    console.print("  del          → prompt delete")
+    console.print("  run          → prompt render")
+    console.print("  hist         → version history")
+    console.print("  restore      → version restore")
+    console.print("  opt          → optimize improve")
+    console.print("  models       → model list")
+    console.print("  addmodel     → model add")
+    console.print("  setmodel     → model set-default")
+    console.print("")
+
     commands = [
         ("init [--path dir]", "Initialize project"),
         ("prompt list", "List prompts"),
@@ -48,6 +80,7 @@ def print_help():
         ("help", "Show this help"),
         ("exit / quit", "Exit REPL"),
     ]
+    console.print("[bold]Full command list:[/bold]")
     for cmd, desc in commands:
         console.print(f"  [yellow]{cmd}[/yellow] – {desc}")
     console.print("")
@@ -65,8 +98,11 @@ def mark_first_run():
     flag.touch()
 
 def show_onboarding():
-    """Show first-run tip."""
-    console.print("[dim]Tip: If you haven't initialized a project, run 'init' to get started.[/dim]\n")
+    """Show first-run tip if no project initialized."""
+    try:
+        find_project_root()
+    except FileNotFoundError:
+        console.print("[dim]No project found. Run 'init' to get started.[/dim]\n")
 
 def show_context_tip(command: str):
     """Show context-sensitive tips after certain commands."""
@@ -112,6 +148,15 @@ def repl_loop():
         if command == "help":
             print_help()
             continue
+
+        # Resolve aliases before dispatching
+        if command in ALIAS_MAP:
+            replacement = ALIAS_MAP[command]
+            # For 'show' and commands that take an immediate argument, keep the rest
+            if command == "show" and len(parts) > 1:
+                parts = replacement + parts[1:]
+            else:
+                parts = replacement + parts[1:]
 
         # Dispatch to Typer CLI programmatically
         try:

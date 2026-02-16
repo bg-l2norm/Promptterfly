@@ -20,7 +20,7 @@ class Prompt(BaseModel):
     """A prompt template with metadata."""
     model_config = ConfigDict(populate_by_name=True)
 
-    id: str
+    id: int
     name: str
     description: Optional[str] = None
     template: str
@@ -38,7 +38,7 @@ class Prompt(BaseModel):
 class Version(BaseModel):
     """A specific version of a prompt."""
     version: int
-    prompt_id: str
+    prompt_id: int
     snapshot: Dict[str, Any]
     message: Optional[str] = None
     created_at: datetime

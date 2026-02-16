@@ -16,7 +16,7 @@ def _format_datetime(dt: datetime) -> str:
 
 
 @app.command("history")
-def history(prompt_id: str):
+def history(prompt_id: int):
     """List version history for a prompt."""
     try:
         project_root = find_project_root()
@@ -49,7 +49,7 @@ def history(prompt_id: str):
 
 
 @app.command("restore")
-def restore(prompt_id: str, version: int):
+def restore(prompt_id: int, version: int):
     """Restore a prompt to a specific version."""
     try:
         project_root = find_project_root()

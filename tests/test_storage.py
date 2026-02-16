@@ -26,7 +26,7 @@ class TestPromptStore:
     def test_load_nonexistent_prompt_raises(self, temp_promptstore: PromptStore):
         """Test loading a prompt that doesn't exist raises FileNotFoundError."""
         with pytest.raises(FileNotFoundError):
-            temp_promptstore.load_prompt("nonexistent")
+            temp_promptstore.load_prompt(999)
 
     def test_list_prompts_empty(self, temp_promptstore: PromptStore):
         """Test listing prompts when directory is empty."""
@@ -45,7 +45,7 @@ class TestPromptStore:
         prompts = []
         for i, t in enumerate(times):
             p = Prompt(
-                id=f"p{i}",
+                id=i,  # integer IDs: 0,1,2
                 name=f"Prompt {i}",
                 template=f"T{i}",
                 created_at=t,
@@ -60,11 +60,10 @@ class TestPromptStore:
         assert len(listed) == 3
         # Should be in descending order: newest first
         assert listed[0].updated_at >= listed[1].updated_at >= listed[2].updated_at
-        # Actually we expect 2 newest first -> 3->2->1
+        # Since we saved p0 (oldest), p1, p2 (newest) in that order,
+        # but sorting by updated_at descending gives: p2 (id=2), p1 (id=1), p0 (id=0)
         ids = [p.id for p in listed]
-        # Since we saved p0, p1, p2 in that order, but p2 has latest updated_at
-        # So order should be p2, p1, p0
-        assert ids == ["p2", "p1", "p0"]
+        assert ids == [2, 1, 0]
 
     def test_create_snapshot_creates_version_file(self, populated_promptstore: PromptStore, sample_prompt: Prompt):
         """Test that create_snapshot writes a version file."""
@@ -134,7 +133,7 @@ class TestVersionStore:
     def test_list_versions_empty(self, temp_project_root: Path):
         """Test listing versions when none exist."""
         vs = VersionStore(temp_project_root)
-        versions = vs.list_versions("nonexistent")
+        versions = vs.list_versions(999)
         assert versions == []
 
     def test_restore_version(self, temp_project_root: Path):
@@ -142,7 +141,7 @@ class TestVersionStore:
         # Create a PromptStore and add a prompt
         store = PromptStore(temp_project_root)
         prompt1 = Prompt(
-            id="p1",
+            id=1,
             name="Original",
             template="Original template",
             created_at=datetime(2023, 1, 1),
@@ -155,7 +154,7 @@ class TestVersionStore:
         store.create_snapshot(prompt1.id, "v1")
         # Modify prompt
         prompt2 = Prompt(
-            id="p1",
+            id=1,
             name="Modified",
             template="Modified template",
             created_at=prompt1.created_at,
@@ -181,13 +180,13 @@ class TestVersionStore:
         """Test restoring a version that doesn't exist raises FileNotFoundError."""
         vs = VersionStore(temp_project_root)
         with pytest.raises(FileNotFoundError):
-            vs.restore_version("nonexistent", 1)
+            vs.restore_version(999, 1)
 
     def test_get_version_details(self, temp_project_root: Path):
         """Test getting details for a specific version."""
         store = PromptStore(temp_project_root)
         prompt = Prompt(
-            id="p1",
+            id=1,
             name="Test",
             template="T",
             created_at=datetime.now(),

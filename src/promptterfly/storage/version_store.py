@@ -21,12 +21,12 @@ class VersionStore:
         self.promptterfly_dir = project_root / ".promptterfly"
         self.versions_base_dir = self.promptterfly_dir / "versions"
 
-    def list_versions(self, prompt_id: str) -> List[Version]:
+    def list_versions(self, prompt_id: int) -> List[Version]:
         """
         List all versions for a prompt, sorted by version number (ascending).
 
         Args:
-            prompt_id: Prompt identifier
+            prompt_id: Prompt identifier (integer)
 
         Returns:
             List of Version instances, oldest first
@@ -34,7 +34,7 @@ class VersionStore:
         Raises:
             FileNotFoundError: If the versions directory doesn't exist
         """
-        versions_dir = self.versions_base_dir / prompt_id
+        versions_dir = self.versions_base_dir / str(prompt_id)
         if not versions_dir.exists():
             return []
 
@@ -52,14 +52,14 @@ class VersionStore:
         versions.sort(key=lambda v: v.version)
         return versions
 
-    def restore_version(self, prompt_id: str, version_number: int) -> Prompt:
+    def restore_version(self, prompt_id: int, version_number: int) -> Prompt:
         """
         Restore a prompt to a specific version.
 
         Copies the version snapshot back to the current prompt file.
 
         Args:
-            prompt_id: Prompt identifier
+            prompt_id: Prompt identifier (integer)
             version_number: Version number to restore (1-indexed)
 
         Returns:
@@ -69,7 +69,7 @@ class VersionStore:
             FileNotFoundError: If version doesn't exist
             ValueError: If version number is invalid
         """
-        versions_dir = self.versions_base_dir / prompt_id
+        versions_dir = self.versions_base_dir / str(prompt_id)
         version_path = versions_dir / f"{version_number:03d}.json"
 
         if not version_path.exists():
@@ -96,18 +96,18 @@ class VersionStore:
 
         return prompt
 
-    def get_version_details(self, prompt_id: str, version_number: int) -> Optional[Version]:
+    def get_version_details(self, prompt_id: int, version_number: int) -> Optional[Version]:
         """
         Get details for a specific version.
 
         Args:
-            prompt_id: Prompt identifier
+            prompt_id: Prompt identifier (integer)
             version_number: Version number
 
         Returns:
             Version instance or None if not found
         """
-        versions_dir = self.versions_base_dir / prompt_id
+        versions_dir = self.versions_base_dir / str(prompt_id)
         version_path = versions_dir / f"{version_number:03d}.json"
 
         if not version_path.exists():

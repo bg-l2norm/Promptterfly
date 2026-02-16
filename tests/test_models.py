@@ -78,7 +78,7 @@ class TestPrompt:
         """Test creating a valid Prompt."""
         now = datetime.now()
         prompt = Prompt(
-            id="abc123",
+            id=123,
             name="My Prompt",
             description="Prompt description",
             template="Say: {text}",
@@ -86,7 +86,7 @@ class TestPrompt:
             created_at=now,
             updated_at=now,
         )
-        assert prompt.id == "abc123"
+        assert prompt.id == 123
         assert prompt.name == "My Prompt"
         assert prompt.template == "Say: {text}"
         assert prompt.tags == ["tag1", "tag2"]
@@ -97,7 +97,7 @@ class TestPrompt:
     def test_render_simple(self):
         """Test prompt rendering with variables."""
         prompt = Prompt(
-            id="1",
+            id=1,
             name="R",
             template="Hello {name}, you have {count} messages",
             created_at=datetime.now(),
@@ -109,7 +109,7 @@ class TestPrompt:
     def test_render_missing_variable(self):
         """Test render raises error when variable missing."""
         prompt = Prompt(
-            id="1",
+            id=1,
             name="R",
             template="Hello {name}",
             created_at=datetime.now(),
@@ -122,7 +122,7 @@ class TestPrompt:
         """Test default fields for Prompt."""
         now = datetime.now()
         prompt = Prompt(
-            id="1",
+            id=1,
             name="N",
             template="T",
             created_at=now,
@@ -142,13 +142,13 @@ class TestVersion:
         now = datetime.now()
         version = Version(
             version=1,
-            prompt_id="pid",
-            snapshot={"id": "pid", "name": "P", "template": "T", "created_at": now.isoformat(), "updated_at": now.isoformat()},
+            prompt_id=1,
+            snapshot={"id": 1, "name": "P", "template": "T", "created_at": now.isoformat(), "updated_at": now.isoformat()},
             message="Initial version",
             created_at=now,
         )
         assert version.version == 1
-        assert version.prompt_id == "pid"
+        assert version.prompt_id == 1
         assert version.snapshot["name"] == "P"
         assert version.message == "Initial version"
         assert version.created_at == now
@@ -158,12 +158,13 @@ class TestVersion:
         now = datetime.now()
         version = Version(
             version=2,
-            prompt_id="pid",
+            prompt_id=1,
             snapshot={},
             created_at=now,
         )
         assert version.message is None
-        assert version.metrics == {}
+        # No metrics field in the model; ensure no extra attributes
+        assert not hasattr(version, 'metrics')
 
 
 class TestProjectConfig:

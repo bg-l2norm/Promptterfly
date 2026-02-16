@@ -60,7 +60,7 @@ def sample_prompt() -> Prompt:
     """
     now = datetime.now()
     return Prompt(
-        id="test123",
+        id=1,
         name="Test Prompt",
         description="A test prompt",
         template="Hello, {name}! How are you?",

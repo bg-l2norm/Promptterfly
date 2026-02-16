@@ -25,29 +25,58 @@ class PromptStore:
         self.prompts_dir = self.promptterfly_dir / "prompts"
         self.versions_base_dir = self.promptterfly_dir / "versions"
 
-    def get_prompt_path(self, prompt_id: str) -> Path:
+    def _next_id(self) -> int:
+        """
+        Get the next sequential integer ID.
+
+        Reads the last used ID from .promptterfly/counter (default 0),
+        increments it, writes back, and returns the new ID.
+
+        Returns:
+            Next integer ID (1, 2, 3, ...)
+        """
+        counter_path = self.promptterfly_dir / "counter"
+        last_id = 0
+        if counter_path.exists():
+            try:
+                with open(counter_path, 'r') as f:
+                    content = f.read().strip()
+                    if content:
+                        last_id = int(content)
+            except (ValueError, IOError):
+                last_id = 0
+        next_id = last_id + 1
+        # Write back atomically? Simple write is fine for single-user CLI.
+        try:
+            with open(counter_path, 'w') as f:
+                f.write(str(next_id))
+        except IOError:
+            pass  # If write fails, still return next_id; subsequent calls may reuse but acceptable
+        return next_id
+
+    def get_prompt_path(self, prompt_id: int) -> Path:
         """
         Get filesystem path for a prompt's JSON file.
 
         Args:
-            prompt_id: Unique prompt identifier
+            prompt_id: Unique prompt identifier (integer)
 
         Returns:
             Path to the prompt JSON file
         """
         return self.prompts_dir / f"{prompt_id}.json"
 
-    def get_versions_dir(self, prompt_id: str) -> Path:
+    def get_versions_dir(self, prompt_id: int) -> Path:
         """
         Get directory containing version snapshots for a prompt.
 
         Args:
-            prompt_id: Unique prompt identifier
+            prompt_id: Unique prompt identifier (integer)
 
         Returns:
             Path to the versions directory for this prompt
         """
-        return self.versions_base_dir / prompt_id
+        return self.versions_base_dir / str(prompt_id)
 
     def _prompt_to_dict(self, prompt: Prompt) -> dict:
         """
@@ -96,12 +125,12 @@ class PromptStore:
         target_path = self.get_prompt_path(prompt.id)
         atomic_write_json(target_path, data)
 
-    def load_prompt(self, prompt_id: str) -> Prompt:
+    def load_prompt(self, prompt_id: int) -> Prompt:
         """
         Load a prompt from disk.
 
         Args:
-            prompt_id: Prompt identifier
+            prompt_id: Prompt identifier (integer)
 
         Returns:
             Prompt instance
@@ -139,7 +168,7 @@ class PromptStore:
         prompts.sort(key=lambda p: p.updated_at, reverse=True)
         return prompts
 
-    def create_snapshot(self, prompt_id: str, message: Optional[str] = None) -> None:
+    def create_snapshot(self, prompt_id: int, message: Optional[str] = None) -> None:
         """
         Create a version snapshot of the current prompt.
 
@@ -147,7 +176,7 @@ class PromptStore:
         a version number and metadata.
 
         Args:
-            prompt_id: Prompt identifier
+            prompt_id: Prompt identifier (integer)
             message: Optional commit message for this version
 
         Raises:
@@ -188,12 +217,12 @@ class PromptStore:
         version_path = versions_dir / f"{next_version:03d}.json"
         atomic_write_json(version_path, snapshot)
 
-    def delete_prompt(self, prompt_id: str) -> None:
+    def delete_prompt(self, prompt_id: int) -> None:
         """
         Delete a prompt and all its versions.
 
         Args:
-            prompt_id: Prompt identifier
+            prompt_id: Prompt identifier (integer)
         """
         # Delete main prompt file
         path = self.get_prompt_path(prompt_id)

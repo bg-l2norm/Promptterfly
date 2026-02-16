@@ -7,13 +7,11 @@ from promptterfly.storage.prompt_store import PromptStore
 from promptterfly.utils.io import find_project_root
 from promptterfly.utils.tui import print_table, print_success, print_error
 from datetime import datetime
-import uuid
 
 app = typer.Typer(help="Manage prompts")
 
 
-def _generate_id() -> str:
-    return str(uuid.uuid4())[:8]
+# Removed random ID generation; now using sequential integers via store._next_id()
 
 
 def _get_store():
@@ -38,7 +36,7 @@ def list():
 
 
 @app.command()
-def show(prompt_id: str):
+def show(prompt_id: int):
     """Show prompt details."""
     store = _get_store()
     try:
@@ -55,12 +53,26 @@ def show(prompt_id: str):
 @app.command()
 def create():
     """Create a new prompt interactively."""
+    # Check project exists before starting prompts
+    try:
+        find_project_root()
+    except FileNotFoundError:
+        print_error("Not in a Promptterfly project. Run 'promptterfly init' first.")
+        raise typer.Exit(1)
+    
     typer.echo("Creating a new prompt")
     name = typer.prompt("Name")
-    description = typer.prompt("Description (optional)", default="")
-    tags_str = typer.prompt("Tags (comma separated)", default="")
+    description = typer.prompt(
+        "Description (a brief summary of what this prompt does, optional)", 
+        default=""
+    )
+    tags_str = typer.prompt(
+        "Tags (categories for organization, comma separated; e.g., 'creative, technical')", 
+        default=""
+    )
     tags = [t.strip() for t in tags_str.split(",") if t.strip()]
-    typer.echo("Enter template (use {variables} for formatting). End with EOF (Ctrl+D) or empty line.")
+    typer.echo("\nEnter template (use {variables} for formatting).")
+    typer.echo("Variables are supplied at render time via a JSON file.")
     typer.echo("--- begin template ---")
     lines = []
     try:
@@ -74,7 +86,8 @@ def create():
     if not template:
         print_error("Template cannot be empty")
         raise typer.Exit(1)
-    prompt_id = _generate_id()
+    store = _get_store()
+    prompt_id = store._next_id()
     now = datetime.now()
     prompt = Prompt(
         id=prompt_id,
@@ -85,13 +98,14 @@ def create():
         created_at=now,
         updated_at=now,
     )
-    store = _get_store()
     store.save_prompt(prompt)
     print_success(f"Created prompt {prompt_id}: {name}")
+    # Auto-list to show the new prompt
+    list()
 
 
 @app.command()
-def update(prompt_id: str):
+def update(prompt_id: int):
     """Update an existing prompt."""
     store = _get_store()
     try:
@@ -127,7 +141,7 @@ def update(prompt_id: str):
 
 
 @app.command()
-def delete(prompt_id: str):
+def delete(prompt_id: int):
     """Delete a prompt."""
     store = _get_store()
     try:
@@ -144,7 +158,7 @@ def delete(prompt_id: str):
 
 
 @app.command()
-def render(prompt_id: str, vars_file: Optional[Path] = typer.Argument(None)):
+def render(prompt_id: int, vars_file: Optional[Path] = typer.Argument(None)):
     """Render prompt with variables from JSON file."""
     import json
     store = _get_store()

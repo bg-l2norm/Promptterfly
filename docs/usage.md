@@ -30,7 +30,7 @@ Hello {customer_name}! Thank you for contacting {company}. How can I assist you 
 (End with EOF or empty line)
 ```
 
-A unique ID is generated and the prompt is saved.
+A unique integer ID (e.g., 1) is generated and the prompt is saved.
 
 ### 3. List and View Prompts
 
@@ -41,10 +41,24 @@ promptterfly prompt show <prompt_id>
 
 ### 4. Render a Prompt with Variables
 
+Create a JSON file with values for the template variables:
+
+```json
+{
+  "customer_name": "Alice",
+  "company": "Acme Inc"
+}
+```
+
+Then run:
+
 ```bash
-echo '{"customer_name": "Alice", "company": "Acme Inc"}' > vars.json
 promptterfly render <prompt_id> vars.json
 ```
+
+The prompt is rendered by substituting `{customer_name}` and `{company}` from the JSON.
+
+**Note:** All variables used in the template must be present in the JSON; missing ones cause an error. Extra keys are ignored.
 
 ### 5. Optimize a Prompt
 
@@ -197,8 +211,9 @@ All project-specific data is stored in `.promptterfly/`:
 .promptterfly/
 ├── config.yaml           # Project configuration
 ├── models.yaml           # Model registry
+├── counter               # Last used integer ID (simple persistence)
 ├── prompts/              # Current prompt states
-│   └── <prompt_id>.json
+│   └── <prompt_id>.json  # e.g., 1.json, 2.json
 └── versions/             # Historical snapshots
     └── <prompt_id>/
         ├── 001.json
@@ -207,6 +222,71 @@ All project-specific data is stored in `.promptterfly/`:
 ```
 
 Global configuration can be placed in `~/.promptterfly/config.yaml` and `~/.promptterfly/models.yaml`.
+
+## Concepts
+
+### Integer IDs
+
+Each prompt is identified by a sequential integer (1, 2, 3...). IDs are assigned automatically using a counter stored in `.promptterfly/counter`. This makes IDs:
+
+- **Stable**: Once assigned, never reused.
+- **Simple**: Short numbers are easy to type and reference.
+- **Predictable**: Useful for scripting and documentation.
+
+You can see a prompt's ID in the `prompt list` output and use it in commands like `prompt show 5` or `optimize improve 12`.
+
+### Variables and Rendering
+
+Prompt templates use `{variable}` placeholders. At render time, you supply a JSON file mapping variable names to values.
+
+**Example**:
+
+Template:
+```
+Hello {customer_name}! Thank you for contacting {company}. How can we assist you today?
+```
+
+JSON:
+```json
+{
+  "customer_name": "Alice",
+  "company": "Acme Inc"
+}
+```
+
+Render:
+```bash
+promptterfly render <id> vars.json
+```
+
+All required variables must be present; missing ones cause an error.
+
+### Tags vs Description
+
+- **Description** is a free-form summary of what the prompt does. It's for humans and appears in `prompt show`. Optional.
+- **Tags** are short labels (e.g., `support`, `marketing`) used for organization and filtering. Multiple tags allowed; filter with `prompt list --tag <tag>`.
+
+Use description for context and tags for quick lookup.
+
+### Command Aliases (REPL)
+
+The interactive REPL (`./start.sh`) supports aliases for faster typing:
+
+- `ls` → `prompt list`
+- `new` / `create` → `prompt create`
+- `show <id>` → `prompt show <id>`
+- `del` → `prompt delete`
+- `run` → `prompt render`
+- `hist` → `version history`
+- `restore` → `version restore`
+- `opt` → `optimize improve`
+- `models` → `model list`
+- `addmodel` → `model add`
+- `setmodel` → `model set-default`
+
+Type `help` inside the REPL to see the full list with explanations.
+
+---
 
 ## Tips
 

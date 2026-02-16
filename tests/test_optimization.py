@@ -46,7 +46,7 @@ def opt_project(tmp_path: Path):
     # Create a prompt
     store = PromptStore(project_root)
     prompt = Prompt(
-        id="test-prompt",
+        id=1,
         name="Test Prompt",
         template="You are a chatbot. {input}",
         created_at=datetime(2023, 1, 1),
@@ -56,7 +56,7 @@ def opt_project(tmp_path: Path):
 
     return {
         "project_root": project_root,
-        "prompt_id": "test-prompt",
+        "prompt_id": 1,
         "store": store,
     }
 
@@ -133,7 +133,7 @@ def test_optimize_prompt_not_found(opt_project, monkeypatch):
 
     # Non-existent ID
     with pytest.raises(FileNotFoundError):
-        optimize(prompt_id="doesnotexist")
+        optimize(prompt_id=999)
 
 
 def test_optimize_dataset_missing(opt_project, monkeypatch):

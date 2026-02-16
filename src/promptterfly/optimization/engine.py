@@ -16,12 +16,12 @@ STRATEGIES = {
 }
 
 
-def optimize(prompt_id: str, strategy: str = 'few_shot', dataset_path: Optional[str] = None) -> Prompt:
+def optimize(prompt_id: int, strategy: str = 'few_shot', dataset_path: Optional[str] = None) -> Prompt:
     """
     Optimize a prompt using a specified strategy.
 
     Args:
-        prompt_id: Identifier of the prompt to optimize.
+        prompt_id: Identifier of the prompt to optimize (integer).
         strategy: Optimization strategy name (default: 'few_shot').
         dataset_path: Path to dataset file (JSONL). If None, uses
                      .promptterfly/dataset.jsonl in project root.
