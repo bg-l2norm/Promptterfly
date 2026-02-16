@@ -52,6 +52,26 @@ The REPL features:
 - Context-sensitive hints (e.g., after `prompt create`, suggests optimization)
 - Ctrl+C friendly; returns to prompt
 
+### Visual Experience
+
+Promptterfly's REPL is designed to be both informative and delightful:
+
+- **Startup Banner**: A colorful ASCII art butterfly with sparkles greets you on launch, accompanied by a random programmer quote to set the tone.
+- **Spiky Loading Animation**: During optimization (and other long-running operations), a custom "spiky" spinner made of Braille characters pulses, giving visual feedback that work is in progress.
+- **Rich Terminal UI**: Tables, colored text, and panels enhance readability and create an engaging experience.
+
+Example banner:
+
+```
+        ✦   ✧
+    ✦     ⋆
+    ✧   ✨
+        ...
+[bold cyan]╔═══════════════════════════════════════════════════╗[/bold cyan]
+[bold cyan]║[/bold cyan]  [bold magenta]    __  __  ____   ___  ____   ____ ___ [/bold magenta]  [bold cyan]║[/bold cyan]
+...
+```
+
 You can also run a single command directly:
 
 ```bash

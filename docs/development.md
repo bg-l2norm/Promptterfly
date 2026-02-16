@@ -104,6 +104,8 @@ optimization:
   metric: accuracy
 ```
 
+**UI/Animation settings** (future): An `ui` section may control visual elements like enabling/disabling the banner and spinner animations. Currently, animations are always on.
+
 Model registry (`.promptterfly/models.yaml`):
 
 ```yaml

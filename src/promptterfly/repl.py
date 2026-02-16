@@ -27,6 +27,7 @@ def print_header():
 def print_help():
     """Print a minimal help listing."""
     console.print("\n[bold cyan]Available commands[/bold cyan] (use without prefix):")
+    console.print("  The REPL shows a colorful startup banner and spiky loading animation during optimization.\n")
     commands = [
         ("init [--path dir]", "Initialize project"),
         ("prompt list", "List prompts"),
