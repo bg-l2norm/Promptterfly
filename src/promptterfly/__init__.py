@@ -1,3 +1,3 @@
-"""Promptterfly: Local CLI for prompt management and optimization."""
+from .repl import main as repl_main
 
-__version__ = "0.1.0"
+__all__ = ["repl_main"]

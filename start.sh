@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Promptterfly Start Script
-# Launches an interactive shell with the virtual environment activated.
+# Launches the interactive REPL with the virtual environment activated.
 # For first-time setup, run ./setup.sh first.
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,22 +29,18 @@ fi
 source "$VENV_DIR/bin/activate"
 
 # Check if promptterfly is installed
-if ! command -v promptterfly > /dev/null 2>&1; then
+if ! python -c "import promptterfly" > /dev/null 2>&1; then
     log_error "promptterfly is not installed in the virtual environment."
     log_info "Run './setup.sh' to install dependencies."
     exit 1
 fi
 
-# If arguments are provided, run them directly
+# If arguments are provided, pass them to the REPL as commands
+# The REPL will execute them and exit
 if [ $# -gt 0 ]; then
-    exec "$@"
+    python -m promptterfly.repl -- "$@"
+    exit $?
 fi
 
-# Otherwise, start an interactive shell
-log_info "Starting Promptterfly shell. 'promptterfly' is ready to use."
-log_info "Type 'promptterfly --help' to get started."
-log_info ""
-
-# Use the user's default shell if available, otherwise bash
-SHELL_PATH="${SHELL:-/bin/bash}"
-exec "$SHELL_PATH"
+# Otherwise, start interactive REPL
+python -m promptterfly.repl
