@@ -49,16 +49,24 @@ def init(
             console.print(f"[yellow]Warning: model prefix '{parts[0]}' differs from selected provider '{provider}'. Using '{parts[1]}' as model name.[/yellow]")
         model_id = parts[1]
 
-    # Suggest a model config name
-    suggested_name = f"{provider}-{model_id}".replace("/", "-")
-    name = typer.prompt("Model config name", default=suggested_name)
+    # Auto-generate a model config name (registry name)
+    name = f"{provider}-{model_id}".replace("/", "-")
+    console.print(f"[dim]Using model configuration name: {name}[/dim]")
 
-    # API key environment variable name
-    default_env = f"{provider.upper()}_API_KEY"
-    api_key_env = typer.prompt("API key environment variable name", default=default_env)
+    # Determine if provider is local (no API key needed)
+    LOCAL_PROVIDERS = {"local", "ollama", "llamacpp"}
+    if provider in LOCAL_PROVIDERS:
+        api_key_env = None
+        set_now = False
+        console.print("[dim]Local provider detected; skipping API key setup.[/dim]")
+    else:
+        # API key environment variable name
+        default_env = f"{provider.upper()}_API_KEY"
+        api_key_env = typer.prompt("API key environment variable name", default=default_env)
 
-    # Offer to set API key now
-    set_now = typer.confirm("Set your API key now? (Recommended)", default=True)
+        # Offer to set API key now
+        set_now = typer.confirm("Set your API key now? (Recommended)", default=True)
+
     if set_now:
         key = typer.prompt(f"{provider} API key", hide_input=True)
         dotenv_path = project_root / ".env"

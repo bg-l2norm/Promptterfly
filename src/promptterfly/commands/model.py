@@ -123,7 +123,6 @@ def interactive_model_selection(provider: str) -> str:
     # Prefer DEFAULT_PROVIDER_MODELS for well-known models
     if provider in DEFAULT_PROVIDER_MODELS:
         models = DEFAULT_PROVIDER_MODELS[provider]
-    # Optionally, could supplement with litellm if needed, but default is cleanest.
     if not models:
         return typer.prompt("Enter model identifier")
     models = sorted(set(models))
@@ -135,6 +134,10 @@ def interactive_model_selection(provider: str) -> str:
         console.print(f"  ... and {len(models)-max_show} more. You can also type the full model name.")
     while True:
         choice = typer.prompt("Select model by number or type full model name")
+        choice = choice.strip()
+        if not choice:
+            console.print("[yellow]Please enter a model number or name.[/yellow]")
+            continue
         try:
             idx = int(choice) - 1
             if 0 <= idx < len(models[:max_show]):
