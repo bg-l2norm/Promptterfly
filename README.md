@@ -70,4 +70,3 @@ See `docs/usage.md` for detailed usage and `docs/development.md` for contributor
 ## License
 
 MIT
->>>>>>> 95b6d96 (feat: initial Promptterfly implementation - prompt manager with local versioning and DSPy optimization)
