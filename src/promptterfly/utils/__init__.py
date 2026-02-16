@@ -15,6 +15,7 @@ from .tui import (
     print_warning,
     highlight_code,
 )
+from .loader import spiky_loading, show_spinner, _SpikyLoading
 
 __all__ = [
     "find_project_root",
@@ -29,4 +30,7 @@ __all__ = [
     "print_error",
     "print_warning",
     "highlight_code",
+    "spiky_loading",
+    "show_spinner",
+    "_SpikyLoading",
 ]

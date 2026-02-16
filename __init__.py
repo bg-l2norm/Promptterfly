@@ -1,5 +1,3 @@
-"""
-Promptterfly: A local CLI tool for managing and optimizing prompts with simple versioning.
-"""
+"""Promptterfly - Claude Code-like prompt optimization utilities."""
 
 __version__ = "0.1.0"
