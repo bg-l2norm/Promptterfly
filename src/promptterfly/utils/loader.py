@@ -48,6 +48,7 @@ class _SpikyLoading:
             time.sleep(0.05)
             self._live.stop()
             self._live = None
+            self.console.print()
 
 
 @contextmanager
