@@ -16,7 +16,9 @@ from promptterfly.utils.tui import print_table, print_success, print_error
 
 console = Console()
 
-# Default provider-model mapping for interactive selection when litellm is unavailable
+# Default provider-model mapping for interactive selection.
+# Non‑local providers have curated model lists.
+# For local providers (e.g., local, ollama, llamacpp), the list is empty, so the user will be prompted to type the model name directly.
 DEFAULT_PROVIDER_MODELS = {
     # Major providers
     "openai": [
@@ -51,13 +53,8 @@ DEFAULT_PROVIDER_MODELS = {
     "anyscale": [
         "anyscale/meta-llama/Llama-2-7b-chat-hf", "anyscale/meta-llama/Llama-2-13b-chat-hf"
     ],
-    # Local/community
-    "ollama": [
-        "ollama/llama2", "ollama/mistral", "ollama/codellama"
-    ],
-    "local": [
-        "local/llama3", "local/mistral", "local/codellama"
-    ],
+    # Local providers: empty lists indicate user should type the model name directly.
+    "local": [],
 }
 
 
