@@ -68,19 +68,26 @@ def interactive_provider_selection() -> str:
         providers = sorted(DEFAULT_PROVIDER_MODELS.keys())
     if not providers:
         providers = sorted(DEFAULT_PROVIDER_MODELS.keys()) or ["openai"]
-    # Build case-insensitive mapping for provider names
+
+    # Build case-insensitive mapping for provider names (full set)
     provider_map = {p.lower(): p for p in providers}
+
+    # Truncate display to first 10 providers
+    display_providers = providers[:10]
     console.print("[bold]Available providers:[/bold]")
-    for i, p in enumerate(providers, 1):
+    for i, p in enumerate(display_providers, 1):
         console.print(f"  {i}) {p}")
+    if len(providers) > 10:
+        console.print(f"  ... and {len(providers)-10} more. You can also type any provider name.")
+
     while True:
         choice = typer.prompt("Select provider by number or type name")
         try:
             idx = int(choice) - 1
-            if 0 <= idx < len(providers):
-                return providers[idx]
+            if 0 <= idx < len(display_providers):
+                return display_providers[idx]
             else:
-                console.print(f"[yellow]Invalid number. Please enter a number between 1 and {len(providers)}.[/yellow]")
+                console.print(f"[yellow]Invalid number. Please enter a number between 1 and {len(display_providers)}.[/yellow]")
         except ValueError:
             lc = choice.lower()
             if lc in provider_map:
@@ -110,20 +117,20 @@ def interactive_model_selection(provider: str) -> str:
     if not models:
         return typer.prompt("Enter model identifier")
     models = sorted(set(models))
-    max_show = 30
+    max_show = 10
     console.print(f"[bold]Available models for {provider}:[/bold]")
     for i, m in enumerate(models[:max_show], 1):
         console.print(f"  {i}) {m}")
     if len(models) > max_show:
-        console.print(f"  ... and {len(models)-max_show} more")
+        console.print(f"  ... and {len(models)-max_show} more. You can also type the full model name.")
     while True:
         choice = typer.prompt("Select model by number or type full model name")
         try:
             idx = int(choice) - 1
-            if 0 <= idx < len(models):
+            if 0 <= idx < len(models[:max_show]):
                 return models[idx]
             else:
-                console.print(f"[yellow]Invalid number. Please enter a number between 1 and {len(models)}.[/yellow]")
+                console.print(f"[yellow]Invalid number. Please enter a number between 1 and {len(models[:max_show])}.[/yellow]")
         except ValueError:
             # Non-numeric input is treated as a custom model identifier
             return choice
