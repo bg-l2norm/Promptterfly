@@ -2,7 +2,7 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
 class ModelConfig(BaseModel):
@@ -18,15 +18,17 @@ class ModelConfig(BaseModel):
 
 class Prompt(BaseModel):
     """A prompt template with metadata."""
+    model_config = ConfigDict(populate_by_name=True)
+
     id: str
     name: str
     description: Optional[str] = None
     template: str
-    tags: List[str] = []
+    tags: List[str] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
-    model_config: Optional[str] = None
-    metadata: Dict[str, Any] = {}
+    model_name: Optional[str] = Field(default=None, alias="model_config")
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
     def render(self, **variables) -> str:
         """Render prompt with variables."""
