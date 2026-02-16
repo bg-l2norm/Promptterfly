@@ -142,6 +142,18 @@ def create():
         created_at=now,
         updated_at=now,
     )
+    # Auto-versioning: create a snapshot after creation (baseline) if enabled
+    try:
+        cfg = store.load_config() if hasattr(store, 'load_config') else None
+    except Exception:
+        cfg = None
+    auto_version = getattr(cfg, 'auto_version', True) if cfg else True
+    if auto_version:
+        try:
+            store.create_snapshot(prompt_id, message="Initial version (auto)")
+        except Exception as e:
+            # Don't fail creation if versioning fails
+            typer.echo(f"[dim]Note: failed to create auto-version: {e}[/dim]")
     store.save_prompt(prompt)
     print_success(f"Created prompt {prompt_id}: {name}")
     # Auto-list to show the new prompt
@@ -157,6 +169,21 @@ def update(prompt_id: int):
     except FileNotFoundError:
         print_error(f"Prompt not found: {prompt_id}")
         raise typer.Exit(1)
+
+    # Auto-versioning: snapshot current state before update, if enabled
+    try:
+        from promptterfly.core.config import load_config
+        cfg = load_config(store.project_root)
+        auto_version = getattr(cfg, 'auto_version', True)
+    except Exception:
+        auto_version = True
+    if auto_version:
+        try:
+            store.create_snapshot(prompt_id, message="Before update")
+        except Exception as e:
+            # Don't block update if versioning fails
+            typer.echo(f"[dim]Warning: failed to create version snapshot: {e}[/dim]")
+
     typer.echo(f"Updating prompt: {p.name}")
     typer.echo("Leave blank to keep current value.")
     name = typer.prompt("Name", default=p.name)

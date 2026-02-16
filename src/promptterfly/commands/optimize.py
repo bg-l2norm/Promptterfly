@@ -5,7 +5,6 @@ from typing import Optional
 
 from promptterfly.storage.prompt_store import PromptStore
 from promptterfly.storage.version_store import VersionStore
-from promptterfly.optimization.engine import optimize as engine_optimize
 from promptterfly.utils.io import find_project_root
 from promptterfly.utils.tui import print_success, print_error
 from promptterfly.utils.loader import spiky_loading
@@ -53,6 +52,12 @@ def improve(
     version_num = versions[-1].version if versions else None
 
     # Run optimization with loading animation
+    try:
+        from promptterfly.optimization.engine import optimize as engine_optimize
+    except ImportError as e:
+        print_error(f"DSPy is not installed. Optimization requires dspy. Please install dependencies: pip install dspy. Details: {e}")
+        raise typer.Exit(1)
+
     try:
         with spiky_loading("Optimizing prompt with DSPy..."):
             new_prompt = engine_optimize(
