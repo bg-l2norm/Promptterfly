@@ -156,7 +156,7 @@ def config_set(key: str, value: str):
 
 
 # Import and register subcommands
-from promptterfly.commands import prompt, version, optimize, model, auto, dataset  # noqa: E402
+from promptterfly.commands import prompt, version, optimize, model, auto, dataset, auto_iterate  # noqa: E402
 
 app.add_typer(prompt.app, name="prompt")
 app.add_typer(version.app, name="version")
@@ -164,6 +164,7 @@ app.add_typer(optimize.app, name="optimize")
 app.add_typer(model.app, name="model")
 app.add_typer(auto.app, name="auto")
 app.add_typer(dataset.app, name="dataset")
+app.add_typer(auto_iterate.app, name="auto-iterate")
 
 
 if __name__ == "__main__":
