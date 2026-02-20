@@ -100,20 +100,6 @@ If you're new to Promptterfly, follow these steps:
 
 ---
 
-## Inside the REPL
-
-The interactive shell (`./start.sh`) offers a richer experience:
-
-- Colored banner with a random programmer quote each start
-- Onboarding tips on first run
-- Context-sensitive hints (e.g., after `prompt create`, suggests optimization)
-- Command aliases for faster typing (see below)
-- Ctrl+C friendly; returns to prompt
-
-Type `help` inside the REPL to see all commands and aliases.
-
----
-
 ## Quick Reference
 
 ### Commands (inside REPL, without prefix)
@@ -159,20 +145,7 @@ Type `help` inside the REPL to see the full alias mapping.
 
 ---
 
-## Concepts
-
-### Integer IDs
-
-Each prompt is identified by a simple sequential integer (1, 2, 3...). IDs are assigned automatically when you create a prompt and stored in a counter file (`.promptterfly/counter`). This approach has several benefits:
-
-- **Predictable**: Easy to reference in scripts and documentation.
-- **Human-friendly**: Short numbers are quicker to type than long hashes or UUIDs.
-- **Stable**: Once assigned, an ID is never reused, even if the prompt is deleted.
-- **Local-only**: IDs are unique within the project; no coordination needed.
-
-When you run commands like `prompt show 5` or `optimize improve 12`, you're referring to these integer IDs. The `prompt list` command displays the current IDs alongside names.
-
-### Variables and Rendering
+## Variables and Rendering
 
 Prompt templates use Python-style `{variable}` placeholders. At render time, you supply a JSON file containing key-value pairs for those variables.
 
@@ -206,7 +179,7 @@ Rules:
 - Extra keys in the JSON are ignored.
 - You can also pipe the JSON via stdin if your shell supports it (e.g., `echo '{"x":1}' | prompt render <id> -` is not yet supported; currently a file path is required).
 
-### Finding Prompts
+## Finding Prompts
 
 Promptterfly includes a built-in fuzzy search to quickly locate prompts by name, description, or template content.
 
@@ -215,7 +188,7 @@ Promptterfly includes a built-in fuzzy search to quickly locate prompts by name,
 - Otherwise, the top 3 results are shown, and you can choose which one to view.
 - This eliminates the need for tags; use descriptive names and detailed descriptions for better recall.
 
-### Optimization
+## Optimization
 
 Promptterfly uses DSPy to automatically improve your prompts.
 
@@ -225,23 +198,6 @@ Promptterfly uses DSPy to automatically improve your prompts.
 3. The optimized prompt is saved as a new version.
 
 The original prompt is automatically snapshotted before optimization, so you can always roll back.
-
----
-
-## Configuration
-
-After `init`, configuration lives in `.promptterfly/config.yaml`:
-
-```yaml
-auto_version: true
-default_model: gpt-3.5-turbo
-prompts_dir: prompts
-optimization: {}
-```
-
-You can edit it directly or use `config set <key> <value>`.
-
-**Model registry:** Add models via `model add` and set a default. LiteLLM integration means any supported provider works (OpenAI, Anthropic, Google, Together, local, etc.).
 
 ---
 
@@ -261,9 +217,6 @@ You can edit it directly or use `config set <key> <value>`.
 │           ├── 002.json
 │           └── ...
 ```
-
-Plain files, no Git required.
-
 ---
 
 ## Commands (Full List)
