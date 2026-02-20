@@ -51,5 +51,7 @@ class ProjectConfig(BaseModel):
     auto_version: bool = Field(True, description="Auto-version on changes")
     default_model: str = Field("gpt-3.5-turbo", description="Default LLM")
     optimization: Dict[str, Any] = Field(default_factory=dict)
+    retention_policy: Optional[int] = Field(None, description="Keep last N versions per prompt (0 = unlimited)")
+    auto_optimize: bool = Field(False, description="Automatically optimize prompts on update if dataset present")
     retention_policy: Optional[int] = Field(None, description="Keep last N versions per prompt")
     auto_optimize: bool = Field(False, description="Automatically optimize prompts on update if dataset present")
