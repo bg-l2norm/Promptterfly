@@ -8,11 +8,11 @@ A self-evolving prompt manager that automatically optimizes your prompts — sma
 
 ## Why Promptterfly?
 
-- **No Git required** – automatic local versioning with snapshots
 - **DSPy-powered optimization** – improve prompts with few-shot learning in one command
 - **Zero hassle setup** – one script installs, another launches
 - **Model-agnostic** – configure any LLM provider (OpenAI, Anthropic, etc.)
 - **Terminal-native** – works where you work, rich TUI, no web app
+- **No Git required** – automatic local versioning with snapshots
 
 ---
 
