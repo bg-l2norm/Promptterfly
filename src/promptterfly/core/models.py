@@ -50,4 +50,6 @@ class ProjectConfig(BaseModel):
     prompts_dir: Path = Field(Path("prompts"), description="Relative prompts path")
     auto_version: bool = Field(True, description="Auto-version on changes")
     default_model: str = Field("gpt-3.5-turbo", description="Default LLM")
-    optimization: Dict[str, Any] = Field(default_factory=dict)
+    optimization: Dict[str, Any]
+    retention_policy: Optional[int] = Field(None, description="Keep last N versions per prompt")
+    auto_optimize: bool = Field(False, description="Automatically optimize prompts on update if dataset present") = Field(default_factory=dict)

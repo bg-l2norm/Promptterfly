@@ -213,6 +213,21 @@ class PromptStore:
             "created_at": datetime.now().isoformat()
         }
 
+
+        # Prune old versions if retention_policy is set
+        try:
+            from promptterfly.core.config import load_config
+            cfg = load_config(self.project_root)
+            keep = getattr(cfg, 'retention_policy', None)
+            if keep and isinstance(keep, int) and keep > 0:
+                # List all version files (including the one we may just write)
+                all_versions = sorted(versions_dir.glob("*.json"), key=lambda p: int(p.stem))
+                if len(all_versions) > keep:
+                    for old in all_versions[:-keep]:
+                        old.unlink()
+        except Exception:
+            pass
+
         # Write snapshot
         version_path = versions_dir / f"{next_version:03d}.json"
         atomic_write_json(version_path, snapshot)

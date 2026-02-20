@@ -71,10 +71,21 @@ def optimize(prompt_id: int, strategy: str = 'few_shot', dataset_path: Optional[
     if not dataset:
         raise ValueError("Dataset is empty or invalid")
 
-    # Load default model configuration
+    # Determine model to use: per-prompt override or default
     config = load_config(project_root)
-    default_model_name = config.default_model
-    model_cfg = get_model_by_name(default_model_name, project_root)
+    # Temporarily load prompt to check override
+    try:
+        _temp_p = store.load_prompt(prompt_id)
+        model_override = getattr(_temp_p, 'model_name', None)
+    except Exception:
+        model_override = None
+    if model_override:
+        model_cfg = get_model_by_name(model_override, project_root)
+        if not model_cfg:
+            raise ValueError(f"Overridden model '{model_override}' not found in registry")
+    else:
+        default_model_name = config.default_model
+        model_cfg = get_model_by_name(default_model_name, project_root)
     if model_cfg is None:
         raise ValueError(f"Default model '{default_model_name}' not found in registry. Add models with 'promptterfly model add'.")
 
