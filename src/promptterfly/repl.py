@@ -109,15 +109,6 @@ def ensure_arguments(parts: List[str]) -> List[str]:
     # Rebuild parts: [command path] + new_positionals + options
     return parts[:arg_start] + new_positionals + options
 
-# Multi-word aliases (natural verb-noun phrasing)
-MULTI_ALIASES = {
-    "add model": ["model", "add"],
-    "remove model": ["model", "remove"],
-    "list models": ["model", "list"],
-    "set model": ["model", "set-default"],
-    "config set": ["config-set"],
-}
-
 def print_header():
     """Print welcome banner and a random quote."""
     print_banner()

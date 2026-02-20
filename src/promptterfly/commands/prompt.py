@@ -146,19 +146,22 @@ def create():
         created_at=now,
         updated_at=now,
     )
+    # Save the prompt first
+    store.save_prompt(prompt)
+
     # Auto-versioning: create a snapshot after creation (baseline) if enabled
     try:
-        cfg = store.load_config() if hasattr(store, 'load_config') else None
+        from promptterfly.core.config import load_config
+        cfg = load_config(store.project_root)
+        auto_version = cfg.auto_version
     except Exception:
-        cfg = None
-    auto_version = getattr(cfg, 'auto_version', True) if cfg else True
+        auto_version = True
     if auto_version:
         try:
             store.create_snapshot(prompt_id, message="Initial version (auto)")
         except Exception as e:
             # Don't fail creation if versioning fails
             typer.echo(f"[dim]Note: failed to create auto-version: {e}[/dim]")
-    store.save_prompt(prompt)
     print_success(f"Created prompt {prompt_id}: {name}")
     # Auto-list to show the new prompt
     list()
