@@ -224,6 +224,19 @@ def update(prompt_id: int):
     p.template = new_template
     p.updated_at = datetime.now()
     store.save_prompt(p)
+    # Auto-optimize after update if enabled and dataset exists
+    try:
+        cfg = load_config(store.project_root)
+        if getattr(cfg, 'auto_optimize', False):
+            ds_path = store.project_root / ".promptterfly" / "dataset.jsonl"
+            if ds_path.exists():
+                typer.echo("Auto-optimizing with new changes...")
+                from promptterfly.optimization.engine import optimize
+                new_prompt = optimize(prompt_id=prompt_id, dataset_path=str(ds_path))
+                store.save_prompt(new_prompt)
+                typer.echo("Auto-optimized prompt updated.")
+    except Exception as e:
+        typer.echo(f"[dim]Auto-opt skipped: {e}[/dim]")
     print_success(f"Updated prompt {prompt_id}")
 
 
