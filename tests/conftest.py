@@ -77,7 +77,8 @@ def sample_prompt() -> Prompt:
         template="Hello, {name}! How are you?",
         tags=["test", "sample"],
         created_at=now,
-        updated_at=now,
+        updated_at=datetime.now(),
+        metadata={}
     )
 
 

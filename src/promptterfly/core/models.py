@@ -53,5 +53,5 @@ class ProjectConfig(BaseModel):
     optimization: Dict[str, Any] = Field(default_factory=dict)
     retention_policy: Optional[int] = Field(None, description="Keep last N versions per prompt (0 = unlimited)")
     auto_optimize: bool = Field(False, description="Automatically optimize prompts on update if dataset present")
-    retention_policy: Optional[int] = Field(None, description="Keep last N versions per prompt")
-    auto_optimize: bool = Field(False, description="Automatically optimize prompts on update if dataset present")
+    budget_max_tokens: int = Field(0, description="Max allowed tokens per session for optimization")
+    budget_max_dollars: float = Field(0.0, description="Max allowed dollars per session for optimization")

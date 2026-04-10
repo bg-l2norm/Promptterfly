@@ -11,7 +11,9 @@ DEFAULT_CONFIG = {
     "prompts_dir": "prompts",
     "auto_version": True,
     "default_model": "gpt-3.5-turbo",
-    "optimization": {}
+    "optimization": {},
+    "budget_max_tokens": 0,
+    "budget_max_dollars": 0.0
 }
 
 

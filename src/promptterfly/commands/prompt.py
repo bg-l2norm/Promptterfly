@@ -106,20 +106,12 @@ def create():
         raise typer.Exit(1)
     
     typer.echo("Creating a new prompt")
-    name = typer.prompt("Name")
+    name = typer.prompt("Name (leave blank for auto-name)", default="")
     description = typer.prompt("Description (Optional)", default="")
     tags_input = typer.prompt("Tags (comma-separated, optional)", default="")
     tags = [t.strip() for t in tags_input.split(",") if t.strip()]
     store = _get_store()
-    # Ensure unique name (auto-append _N if duplicate)
-    existing_names = {p.name for p in store.list_prompts()}
-    base_name = name
-    counter = 1
-    while name in existing_names:
-        counter += 1
-        name = f"{base_name}_{counter}"
-    if counter > 1:
-        typer.echo(f"Name already exists, using '{name}' instead.")
+
     typer.echo("\nEnter template (use {variables} for formatting).")
     typer.echo("Variables are supplied at render time via a JSON file.")
     typer.echo("--- begin template ---")
@@ -135,6 +127,60 @@ def create():
     if not template:
         print_error("Template cannot be empty")
         raise typer.Exit(1)
+
+    if not name:
+        typer.echo("Generating a name for your prompt...")
+        try:
+            from promptterfly.core.config import load_config
+            from promptterfly.models.registry import get_model_by_name
+            import litellm
+            import os
+
+            project_root = store.project_root
+            cfg = load_config(project_root)
+            model_cfg = get_model_by_name(cfg.default_model, project_root)
+            if not model_cfg:
+                print_error(f"Default model {cfg.default_model} not configured. Cannot auto-name.")
+                raise ValueError()
+
+            if model_cfg.api_key_env:
+                api_key = os.getenv(model_cfg.api_key_env)
+                if not api_key:
+                    print_error(f"API key env {model_cfg.api_key_env} is not set.")
+                    raise ValueError()
+
+            model_str = model_cfg.model
+            if model_cfg.provider == "openai":
+                model_str = f"openai/{model_cfg.model}"
+            elif model_cfg.provider == "anthropic":
+                model_str = f"anthropic/{model_cfg.model}"
+
+            resp = litellm.completion(
+                model=model_str,
+                messages=[{"role": "user", "content": f"Generate a short (2-4 words) descriptive title for this prompt template. Output ONLY the title, no quotes, no extra text.\n\nTemplate:\n{template}"}],
+                temperature=0.7,
+                max_tokens=10
+            )
+            name = resp.choices[0].message.content.strip().replace('"', '')
+            if not name:
+                name = "Auto_Named_Prompt"
+            typer.echo(f"\nAuto-generated name: {name}")
+            typer.echo(f"\nAuto-generated name: {name}")
+        except Exception as e:
+            print_error(f"Failed to auto-generate name: {e}")
+            name = "Auto_Named_Prompt"
+            typer.echo(f"\nAuto-generated name: {name}")
+
+    # Ensure unique name (auto-append _N if duplicate)
+    existing_names = {p.name for p in store.list_prompts()}
+    base_name = name
+    counter = 1
+    while name in existing_names:
+        counter += 1
+        name = f"{base_name}_{counter}"
+    if counter > 1:
+        typer.echo(f"Name already exists, using '{name}' instead.")
+
     prompt_id = store._next_id()
     now = datetime.now()
     prompt = Prompt(

@@ -1,14 +1,132 @@
 """Auto-evolution commands."""
 import typer
+import os
+import json
 from pathlib import Path
+from typing import Optional
 from promptterfly.storage.prompt_store import PromptStore
 from promptterfly.core.config import load_config
 from promptterfly.models.registry import get_model_by_name
 from promptterfly.optimization.engine import optimize as engine_optimize
 from promptterfly.utils.io import find_project_root
 from promptterfly.utils.tui import print_success, print_error
+import litellm
+from datetime import datetime
+from promptterfly.core.models import Prompt
 
 app = typer.Typer(help="Auto-evolution commands")
+
+@app.command("generate")
+def auto_generate(
+    description: str = typer.Argument(..., help="Description of what you want the prompt to do"),
+    iterations: int = typer.Option(3, "--iterations", "-i", help="Number of variations to test")
+):
+    """Automatically generate and evaluate a prompt template from a description."""
+    try:
+        project_root = find_project_root()
+    except FileNotFoundError:
+        print_error("Not in a Promptterfly project. Run 'promptterfly init' first.")
+        raise typer.Exit(1)
+
+    cfg = load_config(project_root)
+    model_cfg = get_model_by_name(cfg.default_model, project_root)
+    if not model_cfg:
+        print_error(f"Default model '{cfg.default_model}' not found.")
+        raise typer.Exit(1)
+
+    if model_cfg.api_key_env:
+        api_key = os.getenv(model_cfg.api_key_env)
+        if not api_key:
+            print_error(f"API key env '{model_cfg.api_key_env}' is not set.")
+            raise typer.Exit(1)
+
+    model_str = model_cfg.model
+    if model_cfg.provider == "openai":
+        model_str = f"openai/{model_cfg.model}"
+    elif model_cfg.provider == "anthropic":
+        model_str = f"anthropic/{model_cfg.model}"
+
+    typer.echo(f"Sub-agent is thinking about: '{description}'...")
+
+    try:
+        # Generate variations
+        sys_prompt = "You are an expert prompt engineer. The user will provide a goal. You will write a prompt template that accomplishes this goal. The template should use Python {variable} syntax for inputs. Output ONLY the raw template, no markdown formatting or intro text."
+
+        variations = []
+        for i in range(iterations):
+            resp = litellm.completion(
+                model=model_str,
+                messages=[
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": description}
+                ],
+                temperature=0.8 + (i * 0.1), # increase temp for variance
+                max_tokens=500
+            )
+            variations.append(resp.choices[0].message.content.strip())
+
+
+        typer.echo(f"Generated {iterations} variations. Evaluating them...")
+
+        # Evaluate variations
+        eval_prompt = "You are evaluating prompt templates. I will give you a prompt template. Score its quality for the following goal from 1 to 100 based on clarity, structure, and effectiveness. ONLY output the integer score.\n\nGoal: {goal}\n\nTemplate: {template}"
+
+        best_score = -1
+        best_template = variations[0]
+
+        for template in variations:
+            try:
+                resp = litellm.completion(
+                    model=model_str,
+                    messages=[
+                        {"role": "user", "content": eval_prompt.format(goal=description, template=template)}
+                    ],
+                    temperature=0.0,
+                    max_tokens=10
+                )
+                score_str = resp.choices[0].message.content.strip()
+                digits = ''.join(filter(str.isdigit, score_str))
+                score = int(digits) if digits else 0
+                if score > best_score:
+                    best_score = score
+                    best_template = template
+            except Exception:
+                # Fallback score if it fails
+                pass
+
+        typer.echo(f"Best prompt found (Score: {best_score}/100):\n{best_template}")
+
+        # Generate name
+        resp = litellm.completion(
+            model=model_str,
+            messages=[{"role": "user", "content": f"Generate a short (2-4 words) descriptive title for this prompt template. Output ONLY the title, no quotes, no extra text.\n\nTemplate:\n{best_template}"}],
+            temperature=0.7,
+            max_tokens=10
+        )
+        name = resp.choices[0].message.content.strip().replace('"', '')
+        if not name:
+            name = "Auto_Generated_Prompt"
+
+        store = PromptStore(project_root)
+        prompt_id = store._next_id()
+        now = datetime.now()
+
+        prompt = Prompt(
+            id=prompt_id,
+            name=name,
+            description=f"Auto-generated for: {description}",
+            template=best_template,
+            tags=["auto-generated"],
+            created_at=now,
+            updated_at=now,
+        )
+        store.save_prompt(prompt)
+
+        print_success(f"Saved optimized prompt '{name}' as ID {prompt_id}")
+
+    except Exception as e:
+        print_error(f"Auto-generation failed: {e}")
+        raise typer.Exit(1)
 
 
 @app.command("optimize-all")

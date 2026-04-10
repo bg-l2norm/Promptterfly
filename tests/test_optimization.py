@@ -27,7 +27,7 @@ def opt_project(tmp_path: Path):
     # Save a model
     models = [
         ModelConfig(
-            name="test-model",
+            name="gpt-3.5-turbo",
             provider="openai",
             model="gpt-4",
             api_key_env=None,
@@ -156,7 +156,7 @@ def test_optimize_dataset_missing(opt_project, monkeypatch):
 
     try:
         with pytest.raises(FileNotFoundError):
-            optimize(prompt_id="test-prompt")
+            optimize(prompt_id=opt_project["prompt_id"])
     finally:
         if original is not None:
             engine_module.STRATEGIES["few_shot"] = original
@@ -182,7 +182,7 @@ def test_optimize_empty_dataset(opt_project, monkeypatch):
 
     try:
         with pytest.raises(ValueError, match="Dataset is empty"):
-            optimize(prompt_id="test-prompt")
+            optimize(prompt_id=opt_project["prompt_id"])
     finally:
         if original is not None:
             engine_module.STRATEGIES["few_shot"] = original
@@ -196,7 +196,7 @@ def test_optimize_unknown_strategy(opt_project, monkeypatch):
     monkeypatch.setattr(io_module, "find_project_root", lambda: project_root)
 
     with pytest.raises(ValueError, match="Unknown strategy"):
-        optimize(prompt_id="test-prompt", strategy="unknown")
+        optimize(prompt_id=opt_project["prompt_id"], strategy="unknown")
 
 
 def test_optimize_model_not_configured(opt_project, monkeypatch):
@@ -220,7 +220,7 @@ def test_optimize_model_not_configured(opt_project, monkeypatch):
 
     try:
         with pytest.raises(ValueError, match="not found in registry"):
-            optimize(prompt_id="test-prompt")
+            optimize(prompt_id=opt_project["prompt_id"])
     finally:
         if original is not None:
             engine_module.STRATEGIES["few_shot"] = original
