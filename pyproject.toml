@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "promptterfly"
 version = "0.1.0"
-description = "Local CLI tool for managing and optimizing prompts with simple versioning"
+description = "A self-evolving prompt manager that automatically optimizes your prompts — smart, easy access, and always improving."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"

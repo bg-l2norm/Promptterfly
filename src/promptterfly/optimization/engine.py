@@ -1,5 +1,6 @@
 """DSPy optimization engine."""
 from datetime import datetime
+import litellm
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import json
@@ -89,13 +90,27 @@ def optimize(prompt_id: int, strategy: str = 'few_shot', dataset_path: Optional[
     if model_cfg is None:
         raise ValueError(f"Default model '{default_model_name}' not found in registry. Add models with 'promptterfly model add'.")
 
+
     # Get strategy function
     if strategy not in STRATEGIES:
         raise ValueError(f"Unknown strategy '{strategy}'. Available: {list(STRATEGIES.keys())}")
     strategy_fn = STRATEGIES[strategy]
 
+    # Optional: setup litellm budget tracking globally or pass config limits.
+    # We will set a budget manager or limit for litellm if specified.
+    if config.budget_max_tokens > 0:
+        litellm.max_budget = config.budget_max_dollars if config.budget_max_dollars > 0 else 100.0 # Default fallback if only tokens set
+    if config.budget_max_dollars > 0.0:
+        litellm.max_budget = config.budget_max_dollars
+
     # Run optimization
-    optimized_template = strategy_fn(original_prompt, dataset, model_cfg)
+    try:
+        optimized_template = strategy_fn(original_prompt, dataset, model_cfg)
+    except litellm.BudgetExceededError:
+        from ..utils.tui import print_error
+        print_error("Budget exceeded during optimization!")
+        raise ValueError("Budget exceeded. Increase budget_max_dollars in configuration.")
+
 
     # Create new Prompt with updated template and updated_at
     new_prompt = Prompt(

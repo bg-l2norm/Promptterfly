@@ -33,7 +33,7 @@ class _SpikyLoading:
         else:
             style = style_cfg["style"]
         if "frames" in style_cfg:
-            return Spinner(style_cfg["frames"], style=style, interval=style_cfg.get("interval", 80))
+            return Spinner("dots", style=style)
         else:
             return Spinner(style_cfg["spinner"], style=style, text=self.message)
 
